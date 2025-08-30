@@ -10,8 +10,7 @@ class LoginDto {
 class RegisterDto {
   email: string;
   password: string;
-  firstName?: string;
-  lastName?: string;
+  nickname?: string;
 }
 
 @Controller('auth')
@@ -29,8 +28,7 @@ export class AuthController {
     return this.authService.register(
       registerDto.email,
       registerDto.password,
-      registerDto.firstName,
-      registerDto.lastName
+      registerDto.nickname
     );
   }
 

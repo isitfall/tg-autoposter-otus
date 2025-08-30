@@ -1,7 +1,7 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './user.entity';
+import { User } from '../entities/user.entity';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -11,7 +11,7 @@ export class UsersService {
     private usersRepository: Repository<User>,
   ) {}
 
-  async create(email: string, password: string, firstName?: string, lastName?: string): Promise<User> {
+  async create(email: string, password: string, nickname?: string): Promise<User> {
     // Проверяем, существует ли пользователь с таким email
     const existingUser = await this.findByEmail(email);
     if (existingUser) {
@@ -25,8 +25,7 @@ export class UsersService {
     const user = this.usersRepository.create({
       email,
       password: hashedPassword,
-      firstName,
-      lastName,
+      nickname,
     });
 
     return this.usersRepository.save(user);
@@ -36,7 +35,7 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { email } });
   }
 
-  async findById(id: number): Promise<User | null> {
+  async findById(id: string): Promise<User | null> {
     return this.usersRepository.findOne({ where: { id } });
   }
 
@@ -48,7 +47,7 @@ export class UsersService {
     return null;
   }
 
-  async updateProfile(id: number, updates: Partial<User>): Promise<User> {
+  async updateProfile(id: string, updates: Partial<User>): Promise<User> {
     const user = await this.findById(id);
     if (!user) {
       throw new NotFoundException('Пользователь не найден');

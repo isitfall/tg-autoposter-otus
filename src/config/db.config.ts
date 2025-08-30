@@ -7,7 +7,7 @@ export default registerAs('database', () => ({
     username: process.env.DATABASE_USER || 'postgres',
     password: process.env.DATABASE_PASSWORD || 'password',
     database: process.env.DATABASE_NAME || 'tg_autoposter',
-    entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-    synchronize: process.env.NODE_ENV !== 'production', // Автоматическая синхронизация только в dev
+    entities: [__dirname + '/../entities/*.entity{.ts,.js}'],
+    synchronize: process.env.NODE_ENV !== 'production',
     logging: process.env.NODE_ENV !== 'production',
 }));
