@@ -1,4 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Channel } from '../channels/channel.entity';
+import { Post } from '../posts/post.entity';
 
 @Entity('users')
 export class User {
@@ -11,11 +13,11 @@ export class User {
   @Column()
   password: string;
 
-  @Column({ nullable: true })
-  firstName: string;
+  @OneToMany(() => Channel, (channel) => channel.user, { cascade: true })
+  channels: Channel[];
 
-  @Column({ nullable: true })
-  lastName: string;
+  @OneToMany(() => Post, (post) => post.user)
+  posts: Post[];
 
   @CreateDateColumn()
   createdAt: Date;

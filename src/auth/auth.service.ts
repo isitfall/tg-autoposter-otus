@@ -20,9 +20,7 @@ export class AuthService {
   async login(user: any) {
     const payload = { 
       email: user.email, 
-      sub: user.id,
-      firstName: user.firstName,
-      lastName: user.lastName
+      sub: user.id
     };
     
     return {
@@ -30,15 +28,13 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
         createdAt: user.createdAt,
       },
     };
   }
 
-  async register(email: string, password: string, firstName?: string, lastName?: string) {
-    const user = await this.usersService.create(email, password, firstName, lastName);
+  async register(email: string, password: string) {
+    const user = await this.usersService.create(email, password);
     
     // Автоматически логиним пользователя после регистрации
     return this.login(user);
