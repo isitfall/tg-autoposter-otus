@@ -1,6 +1,134 @@
+# tg-autoposter-otus
+
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
+
+## Описание
+
+Проект с реализованной простой авторизацией через логин и пароль на базе NestJS.
+
+## Возможности
+
+- ✅ Простая авторизация через email/пароль
+- ✅ Регистрация новых пользователей
+- ✅ JWT токены для авторизации
+- ✅ Хеширование паролей (bcrypt)
+- ✅ Защищенные маршруты
+- ✅ PostgreSQL с TypeORM
+- ✅ CORS поддержка
+- ✅ Статические файлы
+- ✅ TypeScript
+
+## Быстрый старт
+
+### 1. Установка зависимостей
+
+```bash
+npm install
+```
+
+### 2. Настройка базы данных
+
+Создайте PostgreSQL базу данных и файл `.env`:
+
+```env
+# База данных
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_USER=postgres
+DATABASE_PASSWORD=your_password
+DATABASE_NAME=tg_autoposter
+
+# JWT
+JWT_SECRET=your_jwt_secret_key
+
+# Порт
+PORT=3000
+```
+
+### 3. Запуск
+
+```bash
+# Разработка
+npm run start:dev
+
+# Продакшн
+npm run start:prod
+```
+
+### 4. Тестирование
+
+Откройте `http://localhost:3000` в браузере и используйте формы входа/регистрации.
+
+## API Endpoints
+
+- `GET /` - Главная страница с формами авторизации
+- `POST /auth/register` - Регистрация нового пользователя
+- `POST /auth/login` - Вход в систему
+- `GET /auth/profile` - Профиль пользователя (требует JWT)
+
+## Примеры использования
+
+### Регистрация
+```bash
+curl -X POST http://localhost:3000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"password123","firstName":"Иван","lastName":"Иванов"}'
+```
+
+### Вход
+```bash
+curl -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"password123"}'
+```
+
+### Получение профиля
+```bash
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  http://localhost:3000/auth/profile
+```
+
+## Структура проекта
+
+```
+src/
+├── auth/
+│   ├── strategies/
+│   │   └── jwt.strategy.ts       # JWT стратегия
+│   ├── guards/
+│   │   └── jwt-auth.guard.ts     # JWT guard
+│   ├── auth.controller.ts         # Контроллер аутентификации
+│   ├── auth.service.ts            # Сервис аутентификации
+│   └── auth.module.ts             # Модуль аутентификации
+├── users/
+│   ├── user.entity.ts             # Сущность пользователя
+│   ├── users.service.ts           # Сервис пользователей
+│   └── users.module.ts            # Модуль пользователей
+├── config/
+│   └── db.config.ts               # Конфигурация базы данных
+└── main.ts                        # Главный файл приложения
+
+public/
+└── index.html                     # Страница авторизации
+```
+
+## Безопасность
+
+- Пароли хешируются с помощью bcrypt
+- JWT токены с сроком действия 1 день
+- Защищенные маршруты через guards
+- Валидация входных данных
+
+## Дополнительные возможности
+
+Для расширения функциональности можно:
+1. Добавить refresh токены
+2. Реализовать роли и права доступа
+3. Добавить логирование
+4. Реализовать восстановление пароля
+5. Добавить email верификацию
 
 [circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
 [circleci-url]: https://circleci.com/gh/nestjs/nest
