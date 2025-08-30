@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import databaseConfig from './config/db.config';
 import authConfig from './config/auth.config';
+import { UserEntity } from './entities/user.entity';
 
 @Module({
   imports: [
@@ -14,9 +15,13 @@ import authConfig from './config/auth.config';
       isGlobal: true,
       load: [databaseConfig, authConfig],
     }),
-    TypeOrmModule.forRoot(databaseConfig() as TypeOrmModuleOptions),
-    AuthModule,
+    TypeOrmModule.forRoot({
+      ...(databaseConfig() as TypeOrmModuleOptions), 
+      entities: [UserEntity], 
+      synchronize: true
+    }),
     UsersModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TG AUTH</title>
+</head>
+<body>
+    <div>
+        <h1>TG AUTH</h1>
+        
+        <div>
+            <script async src="https://telegram.org/js/telegram-widget.js?7"
+                    data-telegram-login="tg_autoposter_otus_bot"
+                    data-size="large"
+                    data-auth-url="http://127.0.0.1:3000/auth/telegram"
+                    data-request-access="write"
+                    data-onauth="onTelegramAuth(user)">
+            </script>
+        </div>
+        
+        <div id="result"></div>
+        <div id="userInfo" style="display: none;"></div>
+    </div>
+
+    <script>
+        function onTelegramAuth(user) {
+            console.log('onTelegramAuth', user);
+            console.log('Telegram auth data:', user);
+            
+            // Отправляем данные на сервер
+            fetch('/auth/telegram', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(user)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Server response:', data);
+                
+                if (data.access_token) {
+                    showSuccess('Авторизация успешна!', data);
+                } else {
+                    showError('Ошибка авторизации');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError('Ошибка при отправке данных на сервер');
+            });
+        }
+        
+        function showSuccess(message, data) {
+            const result = document.getElementById('result');
+            const userInfo = document.getElementById('userInfo');
+            
+            result.textContent = message;
+            result.style.display = 'block';
+            
+            // Показываем информацию о пользователе
+            userInfo.innerHTML = `
+                <p><strong>ID:</strong> ${data.user.id}</p>
+                <p><strong>Telegram ID:</strong> ${data.user.telegramId}</p>
+                <p><strong>Имя:</strong> ${data.user.firstName}</p>
+                <p><strong>Фамилия:</strong> ${data.user.lastName || 'Не указана'}</p>
+                <p><strong>Фото:</strong> ${data.user.photoUrl || 'Не указано'}</p>
+                <p><strong>JWT токен:</strong> ${data.access_token.substring(0, 20)}...</p>
+            `;
+            userInfo.style.display = 'block';
+        }
+        
+        function showError(message) {
+            const result = document.getElementById('result');
+            result.textContent = message;
+            result.style.display = 'block';
+        }
+
+        function waitForTelegramIframe() {
+            console.log('Waiting for Telegram iframe...');
+            
+            // Проверяем каждые 100мс, появился ли iframe
+            const checkInterval = setInterval(() => {
+                const telegramIframe = document.querySelector('iframe');
+                console.log('telegramIframe', telegramIframe);
+                if (telegramIframe) {
+                    console.log('Telegram iframe found and loaded!');
+                    clearInterval(checkInterval);
+                    
+                    onMounted();
+                }
+            }, 500);
+        }
+
+        function onMounted() {
+            console.log('onMounted', window.Telegram.Login);
+            window.Telegram.Login.auth({
+                bot_id: 'tg_autoposter_otus_bot',
+                request_access: true,
+                
+            }, (data) => {
+                console.log('onMounted cb', data);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', waitForTelegramIframe);
+    </script>
+</body>
+</html>
