@@ -10,8 +10,6 @@ class LoginDto {
 class RegisterDto {
   email: string;
   password: string;
-  firstName?: string;
-  lastName?: string;
 }
 
 @Controller('auth')
@@ -28,9 +26,7 @@ export class AuthController {
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(
       registerDto.email,
-      registerDto.password,
-      registerDto.firstName,
-      registerDto.lastName
+      registerDto.password
     );
   }
 

@@ -6,7 +6,7 @@
 
 ## Описание
 
-Проект с реализованной простой авторизацией через логин и пароль на базе NestJS.
+Бэкенд для автоматической публикации контента в Telegram-каналы с поддержкой гибкого расписания.
 
 ## Возможности
 
@@ -16,8 +16,11 @@
 - ✅ Хеширование паролей (bcrypt)
 - ✅ Защищенные маршруты
 - ✅ PostgreSQL с TypeORM
+- ✅ Управление Telegram-каналами
+- ✅ Создание постов с расписанием
+- ✅ Публикация в несколько каналов
+- ✅ Гибкое расписание для каждого канала
 - ✅ CORS поддержка
-- ✅ Статические файлы
 - ✅ TypeScript
 
 ## Быстрый старт
@@ -63,10 +66,23 @@ npm run start:prod
 
 ## API Endpoints
 
+### Авторизация
 - `GET /` - Главная страница с формами авторизации
 - `POST /auth/register` - Регистрация нового пользователя
 - `POST /auth/login` - Вход в систему
 - `GET /auth/profile` - Профиль пользователя (требует JWT)
+
+### Каналы
+- `GET /channels` - Список каналов пользователя (требует JWT)
+- `POST /channels` - Добавить новый канал (требует JWT)
+- `GET /channels/:id` - Получить информацию о канале (требует JWT)
+- `DELETE /channels/:id` - Удалить канал (требует JWT)
+
+### Посты
+- `GET /posts` - Список постов пользователя (требует JWT)
+- `POST /posts` - Создать новый пост с расписанием (требует JWT)
+- `GET /posts/:id` - Получить информацию о посте (требует JWT)
+- `DELETE /posts/:id` - Удалить пост (требует JWT)
 
 ## Примеры использования
 
@@ -74,7 +90,7 @@ npm run start:prod
 ```bash
 curl -X POST http://localhost:3000/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"password123","firstName":"Иван","lastName":"Иванов"}'
+  -d '{"email":"test@example.com","password":"password123"}'
 ```
 
 ### Вход
@@ -88,6 +104,29 @@ curl -X POST http://localhost:3000/auth/login \
 ```bash
 curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   http://localhost:3000/auth/profile
+```
+
+### Добавление канала
+```bash
+curl -X POST http://localhost:3000/channels \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"telegramId":"-1001234567890","title":"Мой канал","username":"@my_channel"}'
+```
+
+### Создание поста с расписанием
+```bash
+curl -X POST http://localhost:3000/posts \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": "Текст поста",
+    "mediaUrl": "https://example.com/image.jpg",
+    "channels": [
+      {"channelId": 1, "scheduledAt": "2024-01-10T10:00:00Z"},
+      {"channelId": 2, "scheduledAt": "2024-01-10T15:30:00Z"}
+    ]
+  }'
 ```
 
 ## Структура проекта
@@ -106,7 +145,19 @@ src/
 │   ├── user.entity.ts             # Сущность пользователя
 │   ├── users.service.ts           # Сервис пользователей
 │   └── users.module.ts            # Модуль пользователей
+├── channels/
+│   ├── channel.entity.ts          # Сущность канала
+│   ├── channels.controller.ts     # Контроллер каналов
+│   ├── channels.service.ts        # Сервис каналов
+│   └── channels.module.ts         # Модуль каналов
+├── posts/
+│   ├── post.entity.ts             # Сущность поста
+│   ├── post-channel.entity.ts     # Сущность расписания
+│   ├── posts.controller.ts        # Контроллер постов
+│   ├── posts.service.ts           # Сервис постов
+│   └── posts.module.ts            # Модуль постов
 ├── config/
+│   ├── auth.config.ts             # Конфигурация JWT
 │   └── db.config.ts               # Конфигурация базы данных
 └── main.ts                        # Главный файл приложения
 
@@ -121,6 +172,54 @@ public/
 - Защищенные маршруты через guards
 - Валидация входных данных
 
+## Схема базы данных
+
+```mermaid
+erDiagram
+    USER ||--o{ CHANNEL : "владеет"
+    USER ||--o{ POST : "создает"
+    POST ||--o{ POST_CHANNEL : "имеет"
+    CHANNEL ||--o{ POST_CHANNEL : "получает"
+    
+    USER {
+        bigint id PK
+        varchar email UK
+        varchar password
+        timestamp createdAt
+        timestamp updatedAt
+    }
+    
+    CHANNEL {
+        bigint id PK
+        varchar telegramId UK
+        varchar title
+        varchar username UK
+        bigint user_id FK
+        timestamp createdAt
+        timestamp updatedAt
+    }
+    
+    POST {
+        bigint id PK
+        text content
+        varchar mediaUrl
+        bigint user_id FK
+        timestamp createdAt
+        timestamp updatedAt
+    }
+    
+    POST_CHANNEL {
+        bigint id PK
+        timestamp scheduledAt
+        enum status
+        text failureReason
+        bigint post_id FK
+        bigint channel_id FK
+        timestamp createdAt
+        timestamp updatedAt
+    }
+```
+
 ## Дополнительные возможности
 
 Для расширения функциональности можно:
@@ -129,6 +228,8 @@ public/
 3. Добавить логирование
 4. Реализовать восстановление пароля
 5. Добавить email верификацию
+6. Добавить интеграцию с Telegram Bot API для публикации постов
+7. Реализовать планировщик для автоматической отправки постов
 
 [circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
 [circleci-url]: https://circleci.com/gh/nestjs/nest

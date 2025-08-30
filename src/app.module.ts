@@ -7,6 +7,8 @@ import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { ChannelsModule } from './channels/channels.module';
+import { PostsModule } from './posts/posts.module';
 import databaseConfig from './config/db.config';
 import authConfig from './config/auth.config';
 
@@ -22,6 +24,8 @@ import authConfig from './config/auth.config';
     }),
     AuthModule,
     UsersModule,
+    ChannelsModule,
+    PostsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
