@@ -1,8 +1,7 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
-import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -11,52 +10,95 @@ export class UsersService {
     private usersRepository: Repository<User>,
   ) {}
 
-  async create(email: string, password: string, nickname?: string): Promise<User> {
-    // Проверяем, существует ли пользователь с таким email
-    const existingUser = await this.findByEmail(email);
-    if (existingUser) {
-      throw new ConflictException('Пользователь с таким email уже существует');
-    }
+  async findByTelegramId(telegramId: string): Promise<User | null> {
+    return this.usersRepository.findOne({ 
+      where: { telegramId },
+      relations: ['channels', 'posts']
+    });
+  }
 
-    // Хешируем пароль
-    const hashedPassword = await bcrypt.hash(password, 10);
+  async findById(id: string): Promise<User | null> {
+    return this.usersRepository.findOne({ 
+      where: { id },
+      relations: ['channels', 'posts']
+    });
+  }
 
-    // Создаем пользователя
+  async createFromTelegram(telegramData: {
+    telegramId: string;
+    telegramUsername?: string;
+    telegramFirstName: string;
+    telegramLastName?: string;
+    telegramLanguageCode?: string;
+  }): Promise<User> {
     const user = this.usersRepository.create({
-      email,
-      password: hashedPassword,
-      nickname,
+      telegramId: telegramData.telegramId,
+      telegramUsername: telegramData.telegramUsername,
+      telegramFirstName: telegramData.telegramFirstName,
+      telegramLastName: telegramData.telegramLastName,
+      telegramLanguageCode: telegramData.telegramLanguageCode,
+      isActive: true,
+      isBlocked: false,
+      lastInteraction: new Date()
     });
 
     return this.usersRepository.save(user);
   }
 
-  async findByEmail(email: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { email } });
-  }
-
-  async findById(id: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { id } });
-  }
-
-  async validateUser(email: string, password: string): Promise<User | null> {
-    const user = await this.findByEmail(email);
-    if (user && await bcrypt.compare(password, user.password)) {
-      return user;
-    }
-    return null;
-  }
-
-  async updateProfile(id: string, updates: Partial<User>): Promise<User> {
-    const user = await this.findById(id);
+  async updateTelegramData(telegramId: string, telegramData: {
+    telegramUsername?: string;
+    telegramFirstName?: string;
+    telegramLastName?: string;
+    telegramLanguageCode?: string;
+  }): Promise<User> {
+    const user = await this.findByTelegramId(telegramId);
     if (!user) {
       throw new NotFoundException('Пользователь не найден');
     }
 
-    // Не позволяем обновлять email и пароль через этот метод
-    const { email, password, ...safeUpdates } = updates;
-    
-    Object.assign(user, safeUpdates);
+    Object.assign(user, {
+      ...telegramData,
+      lastInteraction: new Date()
+    });
+
     return this.usersRepository.save(user);
+  }
+
+  async markAsBlocked(telegramId: string): Promise<void> {
+    await this.usersRepository.update(
+      { telegramId },
+      { isBlocked: true, isActive: false }
+    );
+  }
+
+  async markAsActive(telegramId: string): Promise<void> {
+    await this.usersRepository.update(
+      { telegramId },
+      { 
+        isBlocked: false, 
+        isActive: true, 
+        lastInteraction: new Date() 
+      }
+    );
+  }
+
+  async getActiveUsers(): Promise<User[]> {
+    return this.usersRepository.find({
+      where: { isActive: true, isBlocked: false }
+    });
+  }
+
+  async getUserStats(): Promise<{
+    total: number;
+    active: number;
+    blocked: number;
+  }> {
+    const [total, active, blocked] = await Promise.all([
+      this.usersRepository.count(),
+      this.usersRepository.count({ where: { isActive: true } }),
+      this.usersRepository.count({ where: { isBlocked: true } })
+    ]);
+
+    return { total, active, blocked };
   }
 }

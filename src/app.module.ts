@@ -7,6 +7,7 @@ import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { BotModule } from './bot/bot.module';
 import databaseConfig from './config/db.config';
 import authConfig from './config/auth.config';
 
@@ -22,6 +23,7 @@ import authConfig from './config/auth.config';
     }),
     AuthModule,
     UsersModule,
+    BotModule,
   ],
   controllers: [AppController],
   providers: [AppService],

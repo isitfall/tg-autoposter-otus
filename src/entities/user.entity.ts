@@ -8,13 +8,28 @@ export class User {
   id: string;
 
   @Column({ unique: true })
-  email: string;
-
-  @Column()
-  password: string;
+  telegramId: string;
 
   @Column({ nullable: true })
-  nickname: string;
+  telegramUsername: string;
+
+  @Column()
+  telegramFirstName: string;
+
+  @Column({ nullable: true })
+  telegramLastName: string;
+
+  @Column({ nullable: true })
+  telegramLanguageCode: string;
+
+  @Column({ default: true })
+  isActive: boolean;
+
+  @Column({ default: false })
+  isBlocked: boolean;
+
+  @Column({ nullable: true })
+  lastInteraction: Date;
 
   @OneToMany(() => Channel, (channel) => channel.user, { cascade: true })
   channels: Channel[];
