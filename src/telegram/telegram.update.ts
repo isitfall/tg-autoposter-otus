@@ -281,7 +281,7 @@ export class TelegramUpdate {
         if (!callbackData) return;
 
         if (callbackData.startsWith('select_channel:')) {
-            const [, channelId, channelTitle] = callbackData.split(':');
+            const [, channelId] = callbackData.split(':');
             
             const telegramUser = ctx.callbackQuery?.from;
             if (!telegramUser) return;
@@ -293,6 +293,13 @@ export class TelegramUpdate {
             if (!state || state.step !== PostCreationStateSteps.WaitingChannel) return;
 
             try {
+                const channel = await this.channelsService.getUserChannels(user.id)
+                    .then(channels => channels.find(c => c.id === channelId));
+                
+                if (!channel) {
+                    throw new Error('Канал не найден');
+                }
+
                 const post = await this.postService.createPost({
                     content: state.content,
                     userId: user.id,
@@ -307,7 +314,7 @@ export class TelegramUpdate {
                 await this.bot.api.sendMessage(channelId, state.content, { parse_mode: 'HTML' });
 
                 await ctx.editMessageText(
-                    TelegramMessages.post.publishSuccess(channelTitle),
+                    TelegramMessages.post.publishSuccess(channel.title || ''),
                     { parse_mode: 'HTML' }
                 );
 
@@ -315,12 +322,17 @@ export class TelegramUpdate {
 
             } catch (error) {
                 await ctx.editMessageText(
-                    TelegramMessages.post.publishError(channelTitle, error.message),
+                    TelegramMessages.post.publishError('канал', error.message),
                     { parse_mode: 'HTML' }
                 );
             }
         }
-        await ctx.answerCallbackQuery();
+        
+        try {
+            await ctx.answerCallbackQuery();
+        } catch (error) {
+            console.error('Error answering callback query:', error);
+        }
     }
 
 }
