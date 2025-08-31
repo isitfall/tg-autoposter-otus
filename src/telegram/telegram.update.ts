@@ -2,6 +2,7 @@ import { Command, Ctx, Help, InjectBot, On, Start, Update } from "@grammyjs/nest
 import { Injectable } from "@nestjs/common";
 import { Bot, Context } from "grammy";
 import { AuthService } from "src/auth/auth.service";
+import { ChannelsService } from "src/channels/channels.service";
 import { UsersService } from "src/users/users.service";
 
 @Update()
@@ -11,6 +12,7 @@ export class TelegramUpdate {
         @InjectBot()private readonly bot: Bot<Context>,
         private readonly usersService: UsersService,
         private readonly authService: AuthService,
+        private readonly channelsService: ChannelsService,
     ) {}
 
     @Start()
@@ -72,6 +74,40 @@ export class TelegramUpdate {
     async onHelp(@Ctx() ctx: Context) {
         const helpInfo = `*Help* \n /start - Start the bot \n /profile - View your profile \n /channels - View your channels \n /posts - View your posts`
         await ctx.reply(helpInfo)
+    }
+
+    @Command('add_channel')
+    async onAddChannel(@Ctx() ctx: Context) {
+
+        console.log('ctx chat' , ctx.update)
+
+        const telegramUser = ctx.update.channel_post?.from;
+        const tgChat = ctx.update.channel_post?.chat;
+
+        if (!telegramUser) {
+            await ctx.reply('Ошибка: Невозможно получить данные пользователя.');
+            return;
+        }
+
+        if (!tgChat) {
+            await ctx.reply('Ошибка: Невозможно получить данные канала.');
+            return;
+        }
+
+        console.log('telegramUser', telegramUser);
+        console.log('tgChat', tgChat);
+
+        const user = await this.usersService.findByTelegramId(telegramUser.id.toString());
+
+        const addChannelResult = await this.channelsService.addChannel({
+            telegramId: tgChat.id.toString(),
+            title: tgChat.title,
+            username: tgChat?.username ?? '',
+            userId: user!.id,
+        })
+
+        console.log('addChannelResult', addChannelResult);
+
     }
 
 }

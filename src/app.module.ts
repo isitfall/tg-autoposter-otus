@@ -10,6 +10,8 @@ import { UsersModule } from './users/users.module';
 import databaseConfig from './config/db.config';
 import authConfig from './config/auth.config';
 import { TelegramModule } from './telegram/telegram.module';
+import { ChannelsService } from './channels/channels.service';
+import { ChannelsModule } from './channels/channels.module';
 
 @Module({
   imports: [
@@ -24,6 +26,7 @@ import { TelegramModule } from './telegram/telegram.module';
     AuthModule,
     UsersModule,
     TelegramModule,
+    ChannelsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
