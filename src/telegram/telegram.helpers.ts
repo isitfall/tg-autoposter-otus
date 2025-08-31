@@ -1,10 +1,5 @@
 import { Context } from "grammy";
-
-export interface TelegramUserData {
-    telegramUser: any;
-    tgChat?: any;
-    user?: any;
-}
+import { TelegramUserData } from "./teelgram.types";
 
 export class TelegramHelpers {
     static async validateChannelPost(ctx: Context): Promise<TelegramUserData | null> {

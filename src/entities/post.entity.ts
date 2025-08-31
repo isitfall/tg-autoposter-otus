@@ -11,9 +11,6 @@ export class Post {
   @Column({ type: 'text' })
   content: string;
 
-  @Column({ nullable: true })
-  mediaUrl: string;
-
   @ManyToOne(() => User, (user) => user.posts, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;

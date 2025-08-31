@@ -39,6 +39,21 @@ export const TelegramMessages = {
             'Используйте /channels для просмотра ваших каналов',
     },
     
+    post: {
+        createStart: '<b>Создание поста</b>\n\nОтправьте текст поста, который хотите опубликовать.',
+        selectChannel: '<b>Выберите канал для публикации:</b>',
+        noChannelsForPost: '<b>У вас нет каналов для публикации</b>\n\nСначала добавьте канал с помощью команды /add_channel',
+        publishSuccess: (channelTitle: string) => `<b>Пост успешно опубликован в канале:</b> ${channelTitle}`,
+        publishError: (channelTitle: string, error: string) => `<b>Ошибка публикации в канале ${channelTitle}:</b>\n${error}`,
+        confirmPublish: (content: string, channelTitle: string) => 
+            '<b>Подтвердите публикацию:</b>\n\n' +
+            `<b>Текст поста:</b>\n${content}\n\n` +
+            `<b>Канал:</b> ${channelTitle}\n\n` +
+            'Нажмите "Опубликовать" для отправки поста.',
+        contentTooLong: 'Текст поста слишком длинный. Максимум 4096 символов.',
+        postCancelled: 'Создание поста отменено.',
+    },
+    
     help: {
         commands: 
             '<b>Доступные команды</b>\n\n' +
@@ -47,6 +62,7 @@ export const TelegramMessages = {
             '<b>/channels</b> - Просмотреть ваши каналы\n' +
             '<b>/add_channel</b> - Добавить канал (используйте в канале)\n' +
             '<b>/delete_channel</b> - Удалить канал (используйте в канале)\n' +
+            '<b>/create_post</b> - Создать и опубликовать пост\n' +
             '<b>/posts</b> - Просмотреть ваши посты\n\n',
         addChannelInstructions: 
             '<b>Как добавить канал:</b>\n' +

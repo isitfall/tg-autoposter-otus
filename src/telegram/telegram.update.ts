@@ -1,11 +1,14 @@
 import { Command, Ctx, Help, InjectBot, On, Start, Update } from "@grammyjs/nestjs";
 import { Injectable } from "@nestjs/common";
-import { Bot, Context } from "grammy";
+import { Bot, Context, InlineKeyboard } from "grammy";
 import { AuthService } from "src/auth/auth.service";
 import { ChannelsService } from "src/channels/channels.service";
 import { UsersService } from "src/users/users.service";
 import { TelegramHelpers } from "./telegram.helpers";
 import { TelegramMessages } from "./telegram.messages";
+import { PostCreationStates } from "./telegram.post-creation-state";
+import { PostCreationStateSteps } from "./teelgram.types";
+import { PostService } from "src/post/post.service";
 
 @Update()
 @Injectable()
@@ -15,7 +18,10 @@ export class TelegramUpdate {
         private readonly usersService: UsersService,
         private readonly authService: AuthService,
         private readonly channelsService: ChannelsService,
+        private readonly postService: PostService,
     ) {}
+
+    // common
 
     @Start()
     async onStart(@Ctx() ctx: Context) {
@@ -82,6 +88,8 @@ export class TelegramUpdate {
         
         await ctx.reply(helpInfo, { parse_mode: 'HTML' });
     }
+
+    // channels
 
     @Command('add_channel')
     async onAddChannel(@Ctx() ctx: Context) {
@@ -186,6 +194,127 @@ export class TelegramUpdate {
         await this.channelsService.deleteChannel(tgChat.id.toString(), user.id);
 
         await ctx.reply(TelegramMessages.channel.deleteSuccess);
+    }
+
+    // posts
+
+    @Command('create_post')
+    async onCreatePost(@Ctx() ctx: Context) {
+        const telegramUser = TelegramHelpers.validateMessageUser(ctx);
+
+        if (!telegramUser) {
+            await ctx.reply(TelegramMessages.errors.userNotFound);
+            return;
+        }
+
+        const user = await TelegramHelpers.getUserFromTelegramId(this.usersService, telegramUser.id.toString());
+
+        if (!await TelegramHelpers.validateUserAndReply(ctx, user, TelegramMessages.errors.userNotRegistered)) {
+            return;
+        }
+
+        const channels = await this.channelsService.getUserChannels(user.id);
+
+        if (channels.length === 0) {
+            await ctx.reply(TelegramMessages.post.noChannelsForPost, { parse_mode: 'HTML' });
+            return;
+        }
+
+        PostCreationStates.setState(user.id, {
+            userId: user.id,
+            step: PostCreationStateSteps.WaitingContent,
+            content: ''
+        });
+
+        await ctx.reply(TelegramMessages.post.createStart, { parse_mode: 'HTML' });
+
+    }
+
+    @On('message:text')
+    async onTextMessage(@Ctx() ctx: Context) {
+        const telegramUser = TelegramHelpers.validateMessageUser(ctx);
+        if (!telegramUser) return;
+    
+        const user = await TelegramHelpers.getUserFromTelegramId(this.usersService, telegramUser.id.toString());
+        if (!user) return;
+    
+        const state = PostCreationStates.getState(user.id);
+        if (!state) return;
+
+        if (state.step === PostCreationStateSteps.WaitingContent) {
+            const content = ctx.message?.text ?? '';
+
+            if (content.length > 4096) {
+                await ctx.reply(TelegramMessages.post.contentTooLong);
+                return;
+            }
+
+            PostCreationStates.updateState(user.id, {
+                step: PostCreationStateSteps.WaitingChannel,
+                content: content
+            });
+
+            const channels = await this.channelsService.getUserChannels(user.id);
+
+            const keyboard = new InlineKeyboard();
+
+            channels.forEach((channel, i) => {
+                keyboard.text(channel.title, `select_channel:${channel.id}:${channel.title || ''}`)
+            });
+
+            await ctx.reply(TelegramMessages.post.selectChannel, {
+                parse_mode: 'HTML',
+                reply_markup: keyboard
+            });
+        }
+    }
+
+    @On('callback_query')
+    async onCallbackQuery (@Ctx() ctx: Context) {
+        const callbackData = ctx.callbackQuery?.data;
+        if (!callbackData) return;
+
+        if (callbackData.startsWith('select_channel:')) {
+            const [, channelId, channelTitle] = callbackData.split(':');
+            
+            const telegramUser = ctx.callbackQuery?.from;
+            if (!telegramUser) return;
+    
+            const user = await TelegramHelpers.getUserFromTelegramId(this.usersService, telegramUser.id.toString());
+            if (!user) return;
+    
+            const state = PostCreationStates.getState(user.id);
+            if (!state || state.step !== PostCreationStateSteps.WaitingChannel) return;
+
+            try {
+                const post = await this.postService.createPost({
+                    content: state.content,
+                    userId: user.id,
+                    channelIds: [channelId],
+                });
+
+                await this.postService.publishPost({
+                    postId: post.id,
+                    channelId: channelId,
+                });
+
+                await this.bot.api.sendMessage(channelId, state.content, { parse_mode: 'HTML' });
+
+                await ctx.editMessageText(
+                    TelegramMessages.post.publishSuccess(channelTitle),
+                    { parse_mode: 'HTML' }
+                );
+
+                PostCreationStates.clearState(user.id);
+
+            } catch (error) {
+                await ctx.editMessageText(
+                    TelegramMessages.post.publishError(channelTitle, error.message),
+                    { parse_mode: 'HTML' }
+                );
+            }
+        }
+        await ctx.answerCallbackQuery();
     }
 
 }

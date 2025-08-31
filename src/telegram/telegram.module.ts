@@ -6,6 +6,7 @@ import { UsersModule } from "src/users/users.module";
 import { AuthModule } from "src/auth/auth.module";
 import { ChannelsModule } from "src/channels/channels.module";
 import { Bot, Context } from "grammy";
+import { PostModule } from "src/post/post.module";
 
 @Module({
     imports: [
@@ -18,6 +19,7 @@ import { Bot, Context } from "grammy";
       UsersModule,
       AuthModule,
       ChannelsModule,
+      PostModule,
     ],
       providers: [TelegramUpdate],
       
