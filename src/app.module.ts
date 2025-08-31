@@ -4,12 +4,12 @@ import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
-import { BotModule } from './bot/bot.module';
 import databaseConfig from './config/db.config';
 import authConfig from './config/auth.config';
+import { TelegramModule } from './telegram/telegram.module';
 
 @Module({
   imports: [
@@ -23,7 +23,7 @@ import authConfig from './config/auth.config';
     }),
     AuthModule,
     UsersModule,
-    BotModule,
+    TelegramModule,
   ],
   controllers: [AppController],
   providers: [AppService],
