@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Channel } from 'src/entities/channel.entity';
-import { PostChannel, PostStatus } from 'src/entities/post-channel.entity';
+import { PostPublication, PublicationStatus } from 'src/entities/post-publication.entity';
 import { Post } from 'src/entities/post.entity';
 import { Repository } from 'typeorm';
 import { CreatePostDto, PublishPostDto } from './post.types';
@@ -13,8 +13,8 @@ export class PostService {
     constructor(
         @InjectRepository(Post)
         private postsRepostory: Repository<Post>,
-        @InjectRepository(PostChannel)
-        private postChannelRepository: Repository<PostChannel>,
+        @InjectRepository(PostPublication)
+        private postPublicationRepository: Repository<PostPublication>,
         @InjectRepository(Channel) 
         private channelRepository: Repository<Channel>, 
     ) {}
@@ -24,44 +24,44 @@ export class PostService {
 
         const saved = await this.postsRepostory.save(post);
 
-        const postChannels = channelIds.map(channelId => {
-            this.postChannelRepository.create({
+        const postPublications = channelIds.map(channelId => 
+            this.postPublicationRepository.create({
                 postId: saved.id,
                 channelId,
-                status: PostStatus.SCHEDULED,
+                status: PublicationStatus.SCHEDULED,
                 scheduledAt: new Date(),
             })
-        })
+        )
 
-        await this.postChannelRepository.save(postChannels);
+        await this.postPublicationRepository.save(postPublications);
 
         return saved;
     }
 
     async publishPost({postId, channelId}: PublishPostDto) {
-        const postChannel = await this.postChannelRepository.findOne({
+        const postPublication = await this.postPublicationRepository.findOne({
             where: {postId, channelId},
             relations: ['post', 'channel'],
         })
 
-        if (!postChannel) {
-            throw new Error('PostChannel not found')
+        if (!postPublication) {
+            throw new Error('PostPublication not found')
         }
 
         try {
-            await this.postChannelRepository.update({
-                id: postChannel.id,
+            await this.postPublicationRepository.update({
+                id: postPublication.id,
             }, {
-                status: PostStatus.PUBLISHED,
+                status: PublicationStatus.PUBLISHED,
                 scheduledAt: new Date(),
             })
 
             return true;
         } catch (err) {
-            await this.postChannelRepository.update({
-                id: postChannel.id,
+            await this.postPublicationRepository.update({
+                id: postPublication.id,
             }, {
-                status: PostStatus.FAILED,
+                status: PublicationStatus.FAILED,
                 failureReason: err.message,
             })
         }
@@ -70,7 +70,7 @@ export class PostService {
     async getUsersPosts(userId: string): Promise<Post[]> {
         return this.postsRepostory.find({
             where: { userId },
-            relations: ['postChannels', 'postChannels.channel'],
+            relations: ['postPublications', 'postPublications.channel'],
             order: { createdAt: 'DESC' }
         })
     }
@@ -78,7 +78,7 @@ export class PostService {
     async getPostById(postId: string): Promise<Post | null> {
         return this.postsRepostory.findOne({
             where: {id: postId},
-            relations: ['postChannels', 'postChannels.channel', 'user'],
+            relations: ['postPublications', 'postPublications.channel', 'user'],
         })
     }
 

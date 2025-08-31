@@ -244,6 +244,11 @@ export class TelegramUpdate {
         if (state.step === PostCreationStateSteps.WaitingContent) {
             const content = ctx.message?.text ?? '';
 
+            if (!content.trim()) {
+                await ctx.reply(TelegramMessages.post.contentEmpty);
+                return;
+            }
+
             if (content.length > 4096) {
                 await ctx.reply(TelegramMessages.post.contentTooLong);
                 return;
@@ -259,7 +264,8 @@ export class TelegramUpdate {
             const keyboard = new InlineKeyboard();
 
             channels.forEach((channel, i) => {
-                keyboard.text(channel.title, `select_channel:${channel.id}:${channel.title || ''}`)
+                const buttonText = channel.title || `Канал ${i + 1}`;
+                keyboard.text(buttonText, `select_channel:${channel.id}`);
             });
 
             await ctx.reply(TelegramMessages.post.selectChannel, {

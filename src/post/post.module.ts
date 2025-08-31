@@ -2,12 +2,12 @@ import { Module } from '@nestjs/common';
 import { PostService } from './post.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Post } from 'src/entities/post.entity';
-import { PostChannel } from 'src/entities/post-channel.entity';
+import { PostPublication } from 'src/entities/post-publication.entity';
 import { Channel } from 'src/entities/channel.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Post, PostChannel, Channel]),
+    TypeOrmModule.forFeature([Post, PostPublication, Channel]),
   ],
   providers: [PostService],
   exports: [PostService]
