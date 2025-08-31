@@ -17,8 +17,6 @@ export class TelegramUpdate {
 
     @Start()
     async onStart(@Ctx() ctx: Context) {
-        console.log('bot ctx', ctx.update)
-
         const telegramUser = ctx.update.message?.from;
 
         if (!telegramUser) {
@@ -41,9 +39,20 @@ export class TelegramUpdate {
         });
 
         if (authResult.isNewUser) {
-            await ctx.reply('Добро пожаловать, ' + firstName + '!');
+            await ctx.reply(
+                '<b>Добро пожаловать в tg-autoposter!</b>\n\n' +
+                `Привет, ${firstName}!\n\n` +
+                'Этот бот поможет вам автоматически публиковать посты в ваши Telegram каналы.\n\n' +
+                'Используйте /help для просмотра доступных команд.',
+                { parse_mode: 'HTML' }
+            );
         } else {
-            await ctx.reply('С возвращением, ' + firstName + '!');
+            await ctx.reply(
+                '<b>С возвращением!</b>\n\n' +
+                `Рад снова вас видеть, ${firstName}!\n\n` +
+                'Используйте /help для просмотра доступных команд.',
+                { parse_mode: 'HTML' }
+            );
         }
     }
 
@@ -65,24 +74,51 @@ export class TelegramUpdate {
             return;
         }
 
-        const profileInfo = `*Profile* \n telegram_id: ${user.telegramId} \n name: ${user.telegramUsername} \n channels: ${user.channels?.length || 0} \n posts: ${user.posts?.length || 0}`
+        const profileInfo = 
+            '<b>Профиль пользователя</b>\n\n' +
+            `<b>Telegram ID:</b> ${user.telegramId}\n` +
+            `<b>Имя пользователя:</b> ${user.telegramUsername || 'Не указано'}\n` +
+            `<b>Количество каналов:</b> ${user.channels?.length || 0}\n` +
+            `<b>Количество постов:</b> ${user.posts?.length || 0}\n\n` +
+            'Используйте /channels для просмотра ваших каналов';
 
-        await ctx.reply(profileInfo)
+        await ctx.reply(profileInfo, { parse_mode: 'HTML' })
     }
 
     @Help()
     async onHelp(@Ctx() ctx: Context) {
-        const helpInfo = `*Help* \n /start - Start the bot \n /profile - View your profile \n /channels - View your channels \n /posts - View your posts`
-        await ctx.reply(helpInfo)
+        const helpInfo = 
+            '<b>Доступные команды</b>\n\n' +
+            '<b>/start</b> - Запустить бота и начать работу\n' +
+            '<b>/profile</b> - Просмотреть ваш профиль\n' +
+            '<b>/channels</b> - Просмотреть ваши каналы\n' +
+            '<b>/add_channel</b> - Добавить канал (используйте в канале)\n' +
+            '<b>/posts</b> - Просмотреть ваши посты\n\n' +
+            '<b>Как добавить канал:</b>\n' +
+            '1. Добавьте бота в канал как администратора\n' +
+            '2. Отправьте команду /add_channel прямо в канале\n' +
+            '3. Канал автоматически добавится в ваш аккаунт';
+        
+        await ctx.reply(helpInfo, { parse_mode: 'HTML' })
     }
 
     @Command('add_channel')
     async onAddChannel(@Ctx() ctx: Context) {
+        const channelPost = ctx.update?.channel_post;
 
-        console.log('ctx chat' , ctx.update)
+        if (!channelPost) {
+            await ctx.reply(
+                '<b>Для добавления канала в бот нужно:</b>\n\n' +
+                '1. Сделать бота админом канала\n' +
+                '2. В канале от СВОЕГО ИМЕНИ отправить сообщение /add_channel\n' +
+                '3. Выдать боту права на отправку сообщений в канале.',
+                { parse_mode: 'HTML' }
+            );
+            return;
+        }
 
-        const telegramUser = ctx.update.channel_post?.from;
-        const tgChat = ctx.update.channel_post?.chat;
+        const telegramUser = channelPost?.from;
+        const tgChat = channelPost?.chat;
 
         if (!telegramUser) {
             await ctx.reply('Ошибка: Невозможно получить данные пользователя.');
@@ -94,20 +130,52 @@ export class TelegramUpdate {
             return;
         }
 
-        console.log('telegramUser', telegramUser);
-        console.log('tgChat', tgChat);
-
         const user = await this.usersService.findByTelegramId(telegramUser.id.toString());
 
-        const addChannelResult = await this.channelsService.addChannel({
-            telegramId: tgChat.id.toString(),
-            title: tgChat.title,
-            username: tgChat?.username ?? '',
-            userId: user!.id,
-        })
+        if (!user) {
+            await ctx.reply(
+                '<b>Ошибка: Пользователь не найден</b>\n\n' +
+                'Сначала используйте команду /start в личном чате с ботом.',
+                { parse_mode: 'HTML' }
+            );
+            return;
+        }
 
-        console.log('addChannelResult', addChannelResult);
+        try {
+            const addChannelResult = await this.channelsService.addChannel({
+                telegramId: tgChat.id.toString(),
+                title: tgChat.title,
+                username: tgChat?.username ?? '',
+                userId: user.id,
+            });
 
+            if (!addChannelResult) {
+                await ctx.reply(
+                    '<b>Ошибка при добавлении канала</b>\n\n' +
+                    'Не удалось создать запись о канале.\n' +
+                    'Попробуйте еще раз или обратитесь к администратору.',
+                    { parse_mode: 'HTML' }
+                );
+                return;
+            }
+
+            await ctx.reply(
+                '<b>Канал успешно добавлен!</b>\n\n' +
+                `<b>Название:</b> ${addChannelResult.title}\n` +
+                `<b>Username:</b> ${addChannelResult.username ? '@' + addChannelResult.username : 'Не указан'}\n` +
+                `<b>ID:</b> ${addChannelResult.telegramId}\n\n` +
+                'Теперь вы можете создавать посты для этого канала!\n' +
+                'Используйте /channels для просмотра всех ваших каналов.',
+                { parse_mode: 'HTML' }
+            );
+        } catch (error) {
+            await ctx.reply(
+                '<b>Ошибка при добавлении канала</b>\n\n' +
+                `Детали: ${error.message}\n\n` +
+                'Попробуйте еще раз или обратитесь к администратору.',
+                { parse_mode: 'HTML' }
+            );
+        }
     }
 
 }

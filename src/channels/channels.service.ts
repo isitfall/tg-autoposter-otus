@@ -21,17 +21,18 @@ export class ChannelsService {
             userId: string;
         }
     ): Promise<Channel | null> {
-        const existingChannel = await this.channelsRepository.findOne({
-            where: { username: channelData.username }
-        })
-        if (existingChannel) throw new ConflictException('Channel already exists');
-
 
         const user = await this.userRepository.findOne({
             where: { id: channelData.userId }
         })
 
         if (!user) throw new NotFoundException('User not found');
+
+        const existingChannel = await this.channelsRepository.findOne({
+            where: { telegramId: channelData.telegramId, userId: user.id }
+        })
+
+        if (existingChannel) throw new ConflictException('Channel already exists for this user');
 
         const channel = this.channelsRepository.create({
             ...channelData,
