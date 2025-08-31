@@ -49,10 +49,9 @@ export class ChannelsService {
         })
     }
 
-    async deleteChannel(id: string): Promise<void> {
+    async deleteChannel(telegramChannelId: string, userId: string): Promise<void> {
         const channel = await this.channelsRepository.findOne({
-            where: {id},
-            relations: ['user'],
+            where: {telegramId: telegramChannelId, userId},
         })
 
         if (!channel) throw new NotFoundException('Channel not found');

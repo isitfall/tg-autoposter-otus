@@ -93,11 +93,15 @@ export class TelegramUpdate {
             '<b>/profile</b> - Просмотреть ваш профиль\n' +
             '<b>/channels</b> - Просмотреть ваши каналы\n' +
             '<b>/add_channel</b> - Добавить канал (используйте в канале)\n' +
+            '<b>/delete_channel</b> - Удалить канал (используйте в канале)\n' +
             '<b>/posts</b> - Просмотреть ваши посты\n\n' +
             '<b>Как добавить канал:</b>\n' +
             '1. Добавьте бота в канал как администратора\n' +
             '2. Отправьте команду /add_channel прямо в канале\n' +
-            '3. Канал автоматически добавится в ваш аккаунт';
+            '3. Канал автоматически добавится в ваш аккаунт\n\n' +
+            '<b>Как удалить канал:</b>\n' +
+            '1. Перейдите в нужный канал\n' +
+            '2. Отправьте команду /delete_channel прямо в канале';
         
         await ctx.reply(helpInfo, { parse_mode: 'HTML' })
     }
@@ -176,6 +180,86 @@ export class TelegramUpdate {
                 { parse_mode: 'HTML' }
             );
         }
+    }
+
+    @Command('channels')
+    async onChannels(@Ctx() ctx: Context) {
+        const telegramUser = ctx.update.message?.from;
+
+        if (!telegramUser) {
+            await ctx.reply('Ошибка: Невозможно получить данные пользователя.');
+            return;
+        }
+
+        const user = await this.usersService.findByTelegramId(telegramUser.id.toString());
+
+        if (!user) {
+            await ctx.reply('Ошибка: Не удалось получить данные пользователя из БД')
+            return;
+        }
+
+        const channels = await this.channelsService.getUserChannels(user.id);
+
+        if (channels.length) {
+            const channelsList = channels.map(channel => 
+                `<b>ID:</b> ${channel.id}\n<b>Название:</b> ${channel.title}`
+            ).join('\n\n');
+            
+            await ctx.reply(
+                `<b>Ваши каналы:</b>\n\n${channelsList}`,
+                { parse_mode: 'HTML' }
+            );
+        } else {
+            await ctx.reply(
+                '<b>У вас пока нет каналов</b>\n\n' +
+                'Используйте команду /add_channel в нужном канале, чтобы добавить его.',
+                { parse_mode: 'HTML' }
+            );
+        }
+    }
+
+    @Command('delete_channel')
+    async onDeleteChannel (@Ctx() ctx: Context) {
+        const channelPost = ctx.update?.channel_post;
+
+        if (!channelPost) {
+            await ctx.reply(
+                '<b>Для удаления канала нужно:</b>\n\n' +
+                '1. Перейти в канал\n' +
+                '2. В канале от СВОЕГО ИМЕНИ отправить сообщение /delete_channel.',
+                { parse_mode: 'HTML' }
+            );
+            return;
+        }
+
+        const telegramUser = channelPost?.from;
+        const tgChat = channelPost?.chat;
+
+        if (!telegramUser) {
+            await ctx.reply('Ошибка: Невозможно получить данные пользователя.');
+            return;
+        }
+
+        if (!tgChat) {
+            await ctx.reply('Ошибка: Невозможно получить данные канала.');
+            return;
+        }
+
+        const user = await this.usersService.findByTelegramId(telegramUser.id.toString());
+
+        if (!user) {
+            await ctx.reply(
+                '<b>Ошибка: Пользователь не найден</b>\n\n' +
+                'Сначала используйте команду /start в личном чате с ботом.',
+                { parse_mode: 'HTML' }
+            );
+            return;
+        }
+
+        await this.channelsService.deleteChannel(tgChat.id.toString(), user.id);
+
+        await ctx.reply('Channel successfully deleted');
+
     }
 
 }
