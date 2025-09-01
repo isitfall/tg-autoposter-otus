@@ -9,5 +9,5 @@ export default registerAs('database', () => ({
     database: process.env.DATABASE_NAME || 'tg_autoposter',
     entities: [__dirname + '/../entities/*.entity{.ts,.js}'],
     synchronize: process.env.NODE_ENV !== 'production',
-    logging: process.env.NODE_ENV !== 'production',
+    logging: false && process.env.NODE_ENV !== 'production',
 }));
