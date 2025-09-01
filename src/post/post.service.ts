@@ -1,5 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Bot, Context } from 'grammy';
+import { InjectBot } from '@grammyjs/nestjs';
 import { Channel } from 'src/entities/channel.entity';
 import { PostPublication, PublicationStatus } from 'src/entities/post-publication.entity';
 import { Post } from 'src/entities/post.entity';
@@ -16,7 +18,8 @@ export class PostService {
         @InjectRepository(PostPublication)
         private postPublicationRepository: Repository<PostPublication>,
         @InjectRepository(Channel) 
-        private channelRepository: Repository<Channel>, 
+        private channelRepository: Repository<Channel>,
+        @InjectBot() private bot: Bot<Context>
     ) {}
 
     async createPost({content, userId, channelId, scheduledAt}: CreatePostDto) {
@@ -45,6 +48,12 @@ export class PostService {
         }
 
         try {
+            await this.bot.api.sendMessage(
+                postPublication.channel.telegramId, 
+                postPublication.post.content, 
+                { parse_mode: 'HTML' }
+            );
+
             await this.postPublicationRepository.update({
                 id: postPublication.id,
             }, {
@@ -52,7 +61,7 @@ export class PostService {
                 scheduledAt: new Date(),
             })
 
-            return true;
+            return postPublication;
         } catch (err) {
             await this.postPublicationRepository.update({
                 id: postPublication.id,
@@ -60,6 +69,7 @@ export class PostService {
                 status: PublicationStatus.FAILED,
                 failureReason: err.message,
             })
+            throw err;
         }
     }
 

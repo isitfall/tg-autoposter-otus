@@ -16,11 +16,25 @@ export class PostSchedulerService {
         @InjectBot() private bot: Bot<Context>
     ) {}
 
-    private async publishScheduledPost(publication: PostPublication) {
-        try {
-            
-            await this.bot.api.sendMessage(publication.channel.telegramId, publication.post.content, { parse_mode: 'HTML' });
+    private async sendWithRetry (publication: PostPublication) {
+        const retries = 3
+        for (let attempt = 1; attempt <= retries; attempt ++) {
+            try {
+                await this.bot.api.sendMessage(publication.channel.telegramId, publication.post.content, { parse_mode: 'HTML' });
+                return;
+            } catch (err) {
+                if (attempt === retries) throw err;
 
+                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            }
+            
+        }
+        
+    }
+
+    private async publishScheduledPost(publication: PostPublication) {
+        try {            
+            await this.sendWithRetry(publication);
             await this.postPublicationRepository.update({id: publication.id}, { status: PublicationStatus.PUBLISHED, scheduledAt: new Date() });
         } catch (error) {
             console.error('Error publishing scheduled post:', error);
