@@ -19,22 +19,18 @@ export class PostService {
         private channelRepository: Repository<Channel>, 
     ) {}
 
-    async createPost ({content, userId, channelIds}: CreatePostDto) {
+    async createPost({content, userId, channelId, scheduledAt}: CreatePostDto) {
         const post = this.postsRepostory.create({content, userId});
-
         const saved = await this.postsRepostory.save(post);
 
-        const postPublications = channelIds.map(channelId => 
-            this.postPublicationRepository.create({
-                postId: saved.id,
-                channelId,
-                status: PublicationStatus.SCHEDULED,
-                scheduledAt: new Date(),
-            })
-        )
+        const postPublication = this.postPublicationRepository.create({
+            postId: saved.id,
+            channelId,
+            status: PublicationStatus.SCHEDULED,
+            scheduledAt: scheduledAt ?? new Date(),
+        });
 
-        await this.postPublicationRepository.save(postPublications);
-
+        await this.postPublicationRepository.save(postPublication);
         return saved;
     }
 

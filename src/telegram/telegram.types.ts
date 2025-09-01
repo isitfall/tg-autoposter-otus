@@ -6,11 +6,16 @@ export interface TelegramUserData {
 
 export enum PostCreationStateSteps {
     WaitingContent = 'waiting_for_content',
-    WaitingChannel = 'waiting_for_channel'
+    WaitingChannel = 'waiting_for_channel',
+    WaitingSchedule = 'waiting_for_schedule', // Добавляем шаг с датой
+    WaitingConfirmation = 'waiting_for_confirmation'
 }
 
 export interface PostCreationState {
     userId: string;
     step: PostCreationStateSteps;
     content: string;
+    channelId?: string;
+    channelTitle?: string;
+    scheduledAt?: Date | null;
 }
