@@ -273,6 +273,30 @@ export class TelegramUpdate {
                 reply_markup: keyboard
             });
         }
+
+        if (state.step === PostCreationStateSteps.WaitingSchedule) {
+            const dateInput = ctx.message?.text ?? '';
+
+            const parsedDate = new Date(dateInput);
+
+            const scheduledAt = isNaN(parsedDate.getTime()) ? undefined : parsedDate;
+
+            PostCreationStates.updateState(user.id, {
+                step: PostCreationStateSteps.WaitingConfirmation,
+                scheduledAt: scheduledAt
+            });
+
+            const confirmKeyboard = new InlineKeyboard().text('Publish', 'confirm_post').text('Cancel', 'cancel_post');
+
+            await ctx.reply(
+                TelegramMessages.post.confirmPublish(state.content, state.channelTitle || ''),
+                {
+                    parse_mode: 'HTML',
+                    reply_markup: confirmKeyboard
+                }
+            );
+        }
+        
     }
 
     @On('callback_query')
@@ -281,14 +305,14 @@ export class TelegramUpdate {
         console.log('ctx.callbackQuery' ,ctx.callbackQuery)
         if (!callbackData) return;
 
+        const telegramUser = ctx.callbackQuery?.from;
+        if (!telegramUser) return;
+
+        const user = await TelegramHelpers.getUserFromTelegramId(this.usersService, telegramUser.id.toString());
+        if (!user) return;
+
         if (callbackData.startsWith('select_channel:')) {
             const [, channelId] = callbackData.split(':');
-
-            const telegramUser = ctx.callbackQuery?.from;
-            if (!telegramUser) return;
-    
-            const user = await TelegramHelpers.getUserFromTelegramId(this.usersService, telegramUser.id.toString());
-            if (!user) return;
     
             const state = PostCreationStates.getState(user.id);
 
@@ -302,28 +326,16 @@ export class TelegramUpdate {
                     throw new Error('Канал не найден');
                 }
 
-                const post = await this.postService.createPost({
-                    content: state.content,
-                    userId: user.id,
-                    channelIds: [channelId],
-                });
-
-                console.log('channel', channel);
-                console.log('post', post);
-
-                await this.postService.publishPost({
-                    postId: post.id,
+                PostCreationStates.updateState(user.id, {
+                    step: PostCreationStateSteps.WaitingSchedule,
                     channelId: channelId,
+                    channelTitle: channel.title
                 });
-
-                await this.bot.api.sendMessage(channel.telegramId, state.content, { parse_mode: 'HTML' });
 
                 await ctx.editMessageText(
-                    TelegramMessages.post.publishSuccess(channel.title || ''),
+                    TelegramMessages.post.enterSchedule,
                     { parse_mode: 'HTML' }
                 );
-
-                PostCreationStates.clearState(user.id);
 
             } catch (error) {
                 await ctx.editMessageText(
@@ -331,6 +343,53 @@ export class TelegramUpdate {
                     { parse_mode: 'HTML' }
                 );
             }
+        }
+
+        if (callbackData === 'confirm_post') {
+
+            const state = PostCreationStates.getState(user.id);
+            if (!state || state.step !== PostCreationStateSteps.WaitingConfirmation) return;
+
+            try {
+                const post = await this.postService.createPost({
+                    content: state.content,
+                    userId: user.id,
+                    channelId: state.channelId!,
+                    scheduledAt: state?.scheduledAt ?? undefined,
+                });
+
+                const isScheduled = state.scheduledAt && state.scheduledAt > new Date();
+
+                if (!isScheduled) {
+                    await this.postService.publishPost({
+                        postId: post.id,
+                        channelId: state.channelId!
+                    });
+
+                    const channels = await this.channelsService.getUserChannels(user.id);
+                    const channel = channels.find(c => c.id === state.channelId);
+                    
+                    await this.bot.api.sendMessage(channel!.telegramId, state.content, { parse_mode: 'HTML' });
+                }
+
+                const message = isScheduled 
+                    ? `<b>Пост запланирован для публикации в канале:</b> ${state.channelTitle || ''}`
+                    : `<b>Пост успешно опубликован в канале:</b> ${state.channelTitle || ''}`;
+
+                await ctx.editMessageText(message, { parse_mode: 'HTML' });
+                PostCreationStates.clearState(user.id);
+
+            } catch(err) {
+                await ctx.editMessageText(
+                    TelegramMessages.post.publishError(state.channelTitle || 'канал', err.message),
+                    { parse_mode: 'HTML' }
+                );
+            }
+        }
+
+        if (callbackData === 'cancel_post') {      
+            PostCreationStates.clearState(user.id);
+            await ctx.editMessageText(TelegramMessages.post.postCancelled);
         }
         
         try {
