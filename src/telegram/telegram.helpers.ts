@@ -1,5 +1,5 @@
 import { Context } from "grammy";
-import { TelegramUserData } from "./teelgram.types";
+import { TelegramUserData } from "./telegram.types";
 
 export class TelegramHelpers {
     static async validateChannelPost(ctx: Context): Promise<TelegramUserData | null> {

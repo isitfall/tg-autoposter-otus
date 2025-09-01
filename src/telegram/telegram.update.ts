@@ -7,7 +7,7 @@ import { UsersService } from "src/users/users.service";
 import { TelegramHelpers } from "./telegram.helpers";
 import { TelegramMessages } from "./telegram.messages";
 import { PostCreationStates } from "./telegram.post-creation-state";
-import { PostCreationStateSteps } from "./teelgram.types";
+import { PostCreationStateSteps } from "./telegram.types";
 import { PostService } from "src/post/post.service";
 
 @Update()
@@ -278,11 +278,12 @@ export class TelegramUpdate {
     @On('callback_query')
     async onCallbackQuery (@Ctx() ctx: Context) {
         const callbackData = ctx.callbackQuery?.data;
+        console.log('ctx.callbackQuery' ,ctx.callbackQuery)
         if (!callbackData) return;
 
         if (callbackData.startsWith('select_channel:')) {
             const [, channelId] = callbackData.split(':');
-            
+
             const telegramUser = ctx.callbackQuery?.from;
             if (!telegramUser) return;
     
@@ -290,11 +291,12 @@ export class TelegramUpdate {
             if (!user) return;
     
             const state = PostCreationStates.getState(user.id);
+
             if (!state || state.step !== PostCreationStateSteps.WaitingChannel) return;
 
             try {
-                const channel = await this.channelsService.getUserChannels(user.id)
-                    .then(channels => channels.find(c => c.id === channelId));
+                const channels = await this.channelsService.getUserChannels(user.id)
+                const channel = channels.find(channel => channel.id === channelId);
                 
                 if (!channel) {
                     throw new Error('Канал не найден');
@@ -306,12 +308,15 @@ export class TelegramUpdate {
                     channelIds: [channelId],
                 });
 
+                console.log('channel', channel);
+                console.log('post', post);
+
                 await this.postService.publishPost({
                     postId: post.id,
                     channelId: channelId,
                 });
 
-                await this.bot.api.sendMessage(channelId, state.content, { parse_mode: 'HTML' });
+                await this.bot.api.sendMessage(channel.telegramId, state.content, { parse_mode: 'HTML' });
 
                 await ctx.editMessageText(
                     TelegramMessages.post.publishSuccess(channel.title || ''),
