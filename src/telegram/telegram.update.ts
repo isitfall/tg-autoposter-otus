@@ -25,6 +25,7 @@ export class TelegramUpdate {
 
     @Start()
     async onStart(@Ctx() ctx: Context) {
+        
         const telegramUser = TelegramHelpers.validateMessageUser(ctx);
 
         if (!telegramUser) {
@@ -81,12 +82,7 @@ export class TelegramUpdate {
 
     @Help()
     async onHelp(@Ctx() ctx: Context) {
-        const helpInfo = 
-            TelegramMessages.help.commands +
-            TelegramMessages.help.addChannelInstructions +
-            TelegramMessages.help.deleteChannelInstructions;
-        
-        await ctx.reply(helpInfo, { parse_mode: 'HTML' });
+        await ctx.reply(TelegramMessages.help.commands, { parse_mode: 'HTML' });
     }
 
     // channels
@@ -289,7 +285,7 @@ export class TelegramUpdate {
             const confirmKeyboard = new InlineKeyboard().text('Publish', 'confirm_post').text('Cancel', 'cancel_post');
 
             await ctx.reply(
-                TelegramMessages.post.confirmPublish(state.content, state.channelTitle || ''),
+                TelegramMessages.post.confirmPublish(state.content, state.channelTitle || '', scheduledAt),
                 {
                     parse_mode: 'HTML',
                     reply_markup: confirmKeyboard
@@ -302,7 +298,6 @@ export class TelegramUpdate {
     @On('callback_query')
     async onCallbackQuery (@Ctx() ctx: Context) {
         const callbackData = ctx.callbackQuery?.data;
-        console.log('ctx.callbackQuery' ,ctx.callbackQuery)
         if (!callbackData) return;
 
         const telegramUser = ctx.callbackQuery?.from;
@@ -372,9 +367,11 @@ export class TelegramUpdate {
                     await this.bot.api.sendMessage(channel!.telegramId, state.content, { parse_mode: 'HTML' });
                 }
 
-                const message = isScheduled 
-                    ? `<b>Пост запланирован для публикации в канале:</b> ${state.channelTitle || ''}`
-                    : `<b>Пост успешно опубликован в канале:</b> ${state.channelTitle || ''}`;
+                const message = TelegramMessages.post.publishSuccess(
+                    state.channelTitle || '', 
+                    !!isScheduled, 
+                    state.scheduledAt || undefined
+                );
 
                 await ctx.editMessageText(message, { parse_mode: 'HTML' });
                 PostCreationStates.clearState(user.id);

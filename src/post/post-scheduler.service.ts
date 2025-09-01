@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Bot } from 'grammy';
+import { Bot, Context } from 'grammy';
+import { InjectBot } from '@grammyjs/nestjs';
 import { PostPublication, PublicationStatus } from 'src/entities/post-publication.entity';
 import { PostService } from 'src/post/post.service';
 import { LessThanOrEqual, Repository } from 'typeorm';
@@ -12,7 +13,7 @@ export class PostSchedulerService {
         @InjectRepository(PostPublication)
         private readonly postPublicationRepository: Repository<PostPublication>,
         private readonly postService: PostService,
-        private bot: Bot
+        @InjectBot() private bot: Bot<Context>
     ) {}
 
     private async publishScheduledPost(publication: PostPublication) {
