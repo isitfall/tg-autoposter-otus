@@ -26,10 +26,12 @@ export class PostService {
         const post = this.postsRepostory.create({content, userId});
         const saved = await this.postsRepostory.save(post);
 
+        const isScheduled = scheduledAt && scheduledAt > new Date();
+        
         const postPublication = this.postPublicationRepository.create({
             postId: saved.id,
             channelId,
-            status: PublicationStatus.SCHEDULED,
+            status: isScheduled ? PublicationStatus.SCHEDULED : PublicationStatus.PUBLISHED,
             scheduledAt: scheduledAt ?? new Date(),
         });
 

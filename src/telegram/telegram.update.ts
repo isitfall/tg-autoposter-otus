@@ -356,10 +356,11 @@ export class TelegramUpdate {
                 const isScheduled = state.scheduledAt && state.scheduledAt > new Date();
 
                 if (!isScheduled) {
-                    await this.postService.publishPost({
-                        postId: post.id,
-                        channelId: state.channelId!
-                    });
+
+                    const channels = await this.channelsService.getUserChannels(user.id);
+                    const channel = channels.find(c => c.id === state.channelId);
+                    
+                    await this.bot.api.sendMessage(channel!.telegramId, state.content, { parse_mode: 'HTML' });
                 }
 
                 const message = TelegramMessages.post.publishSuccess(
