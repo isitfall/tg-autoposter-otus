@@ -6,6 +6,7 @@ import { InjectBot } from '@grammyjs/nestjs';
 import { PostPublication, PublicationStatus } from 'src/entities/post-publication.entity';
 import { PostService } from 'src/post/post.service';
 import { LessThanOrEqual, Repository } from 'typeorm';
+import { APP_CONSTANTS } from 'src/constants/app.constants';
 
 @Injectable()
 export class PostSchedulerService {
@@ -17,7 +18,7 @@ export class PostSchedulerService {
     ) {}
 
     private async sendWithRetry (publication: PostPublication) {
-        const retries = 3
+        const retries = APP_CONSTANTS.TELEGRAM.RETRY_ATTEMPTS;
         for (let attempt = 1; attempt <= retries; attempt ++) {
             try {
                 await this.bot.api.sendMessage(publication.channel.telegramId, publication.post.content, { parse_mode: 'HTML' });
@@ -25,11 +26,9 @@ export class PostSchedulerService {
             } catch (err) {
                 if (attempt === retries) throw err;
 
-                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+                await new Promise(resolve => setTimeout(resolve, APP_CONSTANTS.TELEGRAM.RETRY_DELAY_MS * attempt));
             }
-            
         }
-        
     }
 
     private async publishScheduledPost(publication: PostPublication) {

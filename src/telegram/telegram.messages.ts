@@ -1,4 +1,5 @@
 import { formatDate } from "src/utils/date.utils";
+import { APP_CONSTANTS } from "src/constants/app.constants";
 
 export const TelegramMessages = {
     errors: {
@@ -60,13 +61,13 @@ export const TelegramMessages = {
                 (scheduledAt ? `<b>Время публикации:</b> ${formatDate(scheduledAt)}\n\n` : '') +
                 'Нажмите "Опубликовать" для отправки поста.';
         },
-        contentTooLong: 'Текст поста слишком длинный. Максимум 4096 символов.',
+        contentTooLong: `Текст поста слишком длинный. Максимум ${APP_CONSTANTS.TELEGRAM.MAX_MESSAGE_LENGTH} символов.`,
         contentEmpty: 'Текст поста не может быть пустым. Попробуйте еще раз.',
         postCancelled: 'Создание поста отменено.',
         enterSchedule: '<b>Укажите время публикации:</b>\n\n' +
-            'Формат: 2025-12-25T15:30:00+03:00 (ISO8601)\n' +
+            `Формат: ${APP_CONSTANTS.DATE_FORMAT.ISO8601_EXAMPLE} (ISO8601)\n` +
             'в случае некорректной даты пост будет опубликован сразу же',
-        invalidDateFormat: 'Неверный формат даты. Используйте формат ISO8601: 2025-12-25T15:30:00+03:00, в случае некорректной даты пост будет опубликован сразу же',
+        invalidDateFormat: `Неверный формат даты. Используйте формат ISO8601: ${APP_CONSTANTS.DATE_FORMAT.ISO8601_EXAMPLE}, в случае некорректной даты пост будет опубликован сразу же`,
     },
     
     help: {

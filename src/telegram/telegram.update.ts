@@ -9,6 +9,7 @@ import { TelegramMessages } from "./telegram.messages";
 import { PostCreationStates } from "./telegram.post-creation-state";
 import { PostCreationStateSteps } from "./telegram.types";
 import { PostService } from "src/post/post.service";
+import { APP_CONSTANTS } from "src/constants/app.constants";
 
 @Update()
 @Injectable()
@@ -21,7 +22,7 @@ export class TelegramUpdate {
         private readonly postService: PostService,
     ) {}
 
-    // common
+
 
     @Start()
     async onStart(@Ctx() ctx: Context) {
@@ -85,7 +86,7 @@ export class TelegramUpdate {
         await ctx.reply(TelegramMessages.help.commands, { parse_mode: 'HTML' });
     }
 
-    // channels
+
 
     @Command('add_channel')
     async onAddChannel(@Ctx() ctx: Context) {
@@ -192,7 +193,7 @@ export class TelegramUpdate {
         await ctx.reply(TelegramMessages.channel.deleteSuccess);
     }
 
-    // posts
+
 
     @Command('create_post')
     async onCreatePost(@Ctx() ctx: Context) {
@@ -245,7 +246,7 @@ export class TelegramUpdate {
                 return;
             }
 
-            if (content.length > 4096) {
+            if (content.length > APP_CONSTANTS.TELEGRAM.MAX_MESSAGE_LENGTH) {
                 await ctx.reply(TelegramMessages.post.contentTooLong);
                 return;
             }

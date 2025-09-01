@@ -1,0 +1,16 @@
+export const APP_CONSTANTS = {
+    TELEGRAM: {
+        MAX_MESSAGE_LENGTH: 4096,
+        RETRY_ATTEMPTS: 3,
+        RETRY_DELAY_MS: 1000,
+    },
+    SERVER: {
+        DEFAULT_PORT: 3000,
+    },
+    DATABASE: {
+        DEFAULT_PORT: 5432,
+    },
+    DATE_FORMAT: {
+        ISO8601_EXAMPLE: '2025-12-25T15:30:00+03:00',
+    },
+} as const;
