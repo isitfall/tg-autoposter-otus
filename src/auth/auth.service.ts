@@ -13,13 +13,9 @@ export interface TelegramAuthData {
 
 @Injectable()
 export class AuthService {
-  constructor(
-    private usersService: UsersService,
-    private jwtService: JwtService,
-  ) {}
+  constructor(private usersService: UsersService) {}
 
   async telegramAuth(telegramData: TelegramAuthData): Promise<{
-    access_token: string;
     user: User;
     isNewUser: boolean;
   }> {
@@ -38,15 +34,7 @@ export class AuthService {
       );
     }
 
-    const payload = {
-      sub: user.id,
-      telegramId: user.telegramId,
-      username: user.telegramUsername,
-      firstName: user.telegramFirstName,
-    };
-
     return {
-      access_token: this.jwtService.sign(payload),
       user,
       isNewUser,
     };
