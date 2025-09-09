@@ -31,10 +31,6 @@ export class UsersService {
       telegramUsername: telegramData.telegramUsername,
       telegramFirstName: telegramData.telegramFirstName,
       telegramLastName: telegramData.telegramLastName,
-      telegramLanguageCode: telegramData.telegramLanguageCode,
-      isActive: true,
-      isBlocked: false,
-      lastInteraction: new Date(),
     });
 
     return this.usersRepository.save(user);
@@ -60,43 +56,5 @@ export class UsersService {
     });
 
     return this.usersRepository.save(user);
-  }
-
-  async markAsBlocked(telegramId: string): Promise<void> {
-    await this.usersRepository.update(
-      { telegramId },
-      { isBlocked: true, isActive: false },
-    );
-  }
-
-  async markAsActive(telegramId: string): Promise<void> {
-    await this.usersRepository.update(
-      { telegramId },
-      {
-        isBlocked: false,
-        isActive: true,
-        lastInteraction: new Date(),
-      },
-    );
-  }
-
-  async getActiveUsers(): Promise<User[]> {
-    return this.usersRepository.find({
-      where: { isActive: true, isBlocked: false },
-    });
-  }
-
-  async getUserStats(): Promise<{
-    total: number;
-    active: number;
-    blocked: number;
-  }> {
-    const [total, active, blocked] = await Promise.all([
-      this.usersRepository.count(),
-      this.usersRepository.count({ where: { isActive: true } }),
-      this.usersRepository.count({ where: { isBlocked: true } }),
-    ]);
-
-    return { total, active, blocked };
   }
 }
