@@ -1,12 +1,12 @@
-import { Controller, Get, UseGuards, Req } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { Controller, Get, UseGuards, Req } from "@nestjs/common";
+import { AuthService } from "./auth.service";
+import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 
-@Controller('auth')
+@Controller("auth")
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @Get('profile')
+  @Get("profile")
   @UseGuards(JwtAuthGuard)
   getProfile(@Req() req) {
     return {
@@ -16,13 +16,13 @@ export class AuthController {
       firstName: req.user.firstName,
       lastName: req.user.lastName || null,
       isActive: req.user.isActive,
-      createdAt: req.user.createdAt
+      createdAt: req.user.createdAt,
     };
   }
 
-  @Get('stats')
+  @Get("stats")
   @UseGuards(JwtAuthGuard)
   async getStats() {
-    return { message: 'Статистика доступна только через Telegram бота' };
+    return { message: "Статистика доступна только через Telegram бота" };
   }
 }

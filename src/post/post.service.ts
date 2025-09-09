@@ -1,15 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Bot, Context } from 'grammy';
-import { InjectBot } from '@grammyjs/nestjs';
-import { Channel } from 'src/entities/channel.entity';
+import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Bot, Context } from "grammy";
+import { InjectBot } from "@grammyjs/nestjs";
+import { Channel } from "src/entities/channel.entity";
 import {
   PostPublication,
   PublicationStatus,
-} from 'src/entities/post-publication.entity';
-import { Post } from 'src/entities/post.entity';
-import { Repository } from 'typeorm';
-import { CreatePostDto, PublishPostDto } from './post.types';
+} from "src/entities/post-publication.entity";
+import { Post } from "src/entities/post.entity";
+import { Repository } from "typeorm";
+import { CreatePostDto, PublishPostDto } from "./post.types";
 
 @Injectable()
 export class PostService {
@@ -45,18 +45,18 @@ export class PostService {
   async publishPost({ postId, channelId }: PublishPostDto) {
     const postPublication = await this.postPublicationRepository.findOne({
       where: { postId, channelId },
-      relations: ['post', 'channel'],
+      relations: ["post", "channel"],
     });
 
     if (!postPublication) {
-      throw new Error('PostPublication not found');
+      throw new Error("PostPublication not found");
     }
 
     try {
       await this.bot.api.sendMessage(
         postPublication.channel.telegramId,
         postPublication.post.content,
-        { parse_mode: 'HTML' },
+        { parse_mode: "HTML" },
       );
 
       await this.postPublicationRepository.update(
@@ -87,15 +87,15 @@ export class PostService {
   async getUsersPosts(userId: string): Promise<Post[]> {
     return this.postsRepostory.find({
       where: { userId },
-      relations: ['postPublications', 'postPublications.channel'],
-      order: { createdAt: 'DESC' },
+      relations: ["postPublications", "postPublications.channel"],
+      order: { createdAt: "DESC" },
     });
   }
 
   async getPostById(postId: string): Promise<Post | null> {
     return this.postsRepostory.findOne({
       where: { id: postId },
-      relations: ['postPublications', 'postPublications.channel', 'user'],
+      relations: ["postPublications", "postPublications.channel", "user"],
     });
   }
 
@@ -105,7 +105,7 @@ export class PostService {
     });
 
     if (!post) {
-      throw new Error('Post not found or access denied');
+      throw new Error("Post not found or access denied");
     }
 
     await this.postsRepostory.remove(post);

@@ -6,18 +6,18 @@ import {
   On,
   Start,
   Update,
-} from '@grammyjs/nestjs';
-import { Injectable } from '@nestjs/common';
-import { Bot, Context, InlineKeyboard } from 'grammy';
-import { AuthService } from 'src/auth/auth.service';
-import { ChannelsService } from 'src/channels/channels.service';
-import { UsersService } from 'src/users/users.service';
-import { TelegramHelpers } from './telegram.helpers';
-import { TelegramMessages } from './telegram.messages';
-import { PostCreationStates } from './telegram.post-creation-state';
-import { PostCreationStateSteps } from './telegram.types';
-import { PostService } from 'src/post/post.service';
-import { APP_CONSTANTS } from 'src/constants/app.constants';
+} from "@grammyjs/nestjs";
+import { Injectable } from "@nestjs/common";
+import { Bot, Context, InlineKeyboard } from "grammy";
+import { AuthService } from "src/auth/auth.service";
+import { ChannelsService } from "src/channels/channels.service";
+import { UsersService } from "src/users/users.service";
+import { TelegramHelpers } from "./telegram.helpers";
+import { TelegramMessages } from "./telegram.messages";
+import { PostCreationStates } from "./telegram.post-creation-state";
+import { PostCreationStateSteps } from "./telegram.types";
+import { PostService } from "src/post/post.service";
+import { APP_CONSTANTS } from "src/constants/app.constants";
 
 @Update()
 @Injectable()
@@ -57,10 +57,10 @@ export class TelegramUpdate {
       ? TelegramMessages.welcome.newUser(firstName)
       : TelegramMessages.welcome.returningUser(firstName);
 
-    await ctx.reply(message, { parse_mode: 'HTML' });
+    await ctx.reply(message, { parse_mode: "HTML" });
   }
 
-  @Command('profile')
+  @Command("profile")
   async onProfile(@Ctx() ctx: Context) {
     const telegramUser = TelegramHelpers.validateMessageUser(ctx);
 
@@ -92,21 +92,21 @@ export class TelegramUpdate {
       user?.posts?.length || 0,
     );
 
-    await ctx.reply(profileInfo, { parse_mode: 'HTML' });
+    await ctx.reply(profileInfo, { parse_mode: "HTML" });
   }
 
   @Help()
   async onHelp(@Ctx() ctx: Context) {
-    await ctx.reply(TelegramMessages.help.commands, { parse_mode: 'HTML' });
+    await ctx.reply(TelegramMessages.help.commands, { parse_mode: "HTML" });
   }
 
-  @Command('add_channel')
+  @Command("add_channel")
   async onAddChannel(@Ctx() ctx: Context) {
     const channelData = TelegramHelpers.validateChannelPost(ctx);
 
     if (!channelData) {
       await ctx.reply(TelegramMessages.channel.addInstructions, {
-        parse_mode: 'HTML',
+        parse_mode: "HTML",
       });
       return;
     }
@@ -138,13 +138,13 @@ export class TelegramUpdate {
       const addChannelResult = await this.channelsService.addChannel({
         telegramId: tgChat.id.toString(),
         title: tgChat.title,
-        username: tgChat?.username ?? '',
+        username: tgChat?.username ?? "",
         userId: user.id,
       });
 
       if (!addChannelResult) {
         await ctx.reply(TelegramMessages.channel.addError, {
-          parse_mode: 'HTML',
+          parse_mode: "HTML",
         });
         return;
       }
@@ -155,16 +155,16 @@ export class TelegramUpdate {
         addChannelResult.telegramId,
       );
 
-      await ctx.reply(successMessage, { parse_mode: 'HTML' });
+      await ctx.reply(successMessage, { parse_mode: "HTML" });
     } catch (error) {
       await ctx.reply(
         TelegramMessages.channel.addErrorWithDetails((error as Error).message),
-        { parse_mode: 'HTML' },
+        { parse_mode: "HTML" },
       );
     }
   }
 
-  @Command('channels')
+  @Command("channels")
   async onChannels(@Ctx() ctx: Context) {
     const telegramUser = TelegramHelpers.validateMessageUser(ctx);
 
@@ -197,25 +197,25 @@ export class TelegramUpdate {
           (channel) =>
             `<b>ID:</b> ${channel.id}\n<b>Название:</b> ${channel.title}`,
         )
-        .join('\n\n');
+        .join("\n\n");
 
       await ctx.reply(TelegramMessages.channel.channelsList(channelsList), {
-        parse_mode: 'HTML',
+        parse_mode: "HTML",
       });
     } else {
       await ctx.reply(TelegramMessages.channel.noChannels, {
-        parse_mode: 'HTML',
+        parse_mode: "HTML",
       });
     }
   }
 
-  @Command('delete_channel')
+  @Command("delete_channel")
   async onDeleteChannel(@Ctx() ctx: Context) {
     const channelData = TelegramHelpers.validateChannelPost(ctx);
 
     if (!channelData) {
       await ctx.reply(TelegramMessages.channel.deleteInstructions, {
-        parse_mode: 'HTML',
+        parse_mode: "HTML",
       });
       return;
     }
@@ -244,7 +244,7 @@ export class TelegramUpdate {
     }
   }
 
-  @Command('create_post')
+  @Command("create_post")
   async onCreatePost(@Ctx() ctx: Context) {
     const telegramUser = TelegramHelpers.validateMessageUser(ctx);
 
@@ -273,7 +273,7 @@ export class TelegramUpdate {
 
     if (channels.length === 0) {
       await ctx.reply(TelegramMessages.post.noChannelsForPost, {
-        parse_mode: 'HTML',
+        parse_mode: "HTML",
       });
       return;
     }
@@ -281,13 +281,13 @@ export class TelegramUpdate {
     PostCreationStates.setState(user.id, {
       userId: user.id,
       step: PostCreationStateSteps.WaitingContent,
-      content: '',
+      content: "",
     });
 
-    await ctx.reply(TelegramMessages.post.createStart, { parse_mode: 'HTML' });
+    await ctx.reply(TelegramMessages.post.createStart, { parse_mode: "HTML" });
   }
 
-  @On('message:text')
+  @On("message:text")
   async onTextMessage(@Ctx() ctx: Context) {
     const telegramUser = TelegramHelpers.validateMessageUser(ctx);
     if (!telegramUser) return;
@@ -302,7 +302,7 @@ export class TelegramUpdate {
     if (!state) return;
 
     if (state.step === PostCreationStateSteps.WaitingContent) {
-      const content = ctx.message?.text ?? '';
+      const content = ctx.message?.text ?? "";
 
       if (!content.trim()) {
         await ctx.reply(TelegramMessages.post.contentEmpty);
@@ -329,13 +329,13 @@ export class TelegramUpdate {
       });
 
       await ctx.reply(TelegramMessages.post.selectChannel, {
-        parse_mode: 'HTML',
+        parse_mode: "HTML",
         reply_markup: keyboard,
       });
     }
 
     if (state.step === PostCreationStateSteps.WaitingSchedule) {
-      const dateInput = ctx.message?.text ?? '';
+      const dateInput = ctx.message?.text ?? "";
 
       const parsedDate = new Date(dateInput);
 
@@ -347,24 +347,24 @@ export class TelegramUpdate {
       });
 
       const confirmKeyboard = new InlineKeyboard()
-        .text('Publish', 'confirm_post')
-        .text('Cancel', 'cancel_post');
+        .text("Publish", "confirm_post")
+        .text("Cancel", "cancel_post");
 
       await ctx.reply(
         TelegramMessages.post.confirmPublish(
           state.content,
-          state.channelTitle || '',
+          state.channelTitle || "",
           scheduledAt,
         ),
         {
-          parse_mode: 'HTML',
+          parse_mode: "HTML",
           reply_markup: confirmKeyboard,
         },
       );
     }
   }
 
-  @On('callback_query')
+  @On("callback_query")
   async onCallbackQuery(@Ctx() ctx: Context) {
     const callbackData = ctx.callbackQuery?.data;
     if (!callbackData) return;
@@ -378,8 +378,8 @@ export class TelegramUpdate {
     );
     if (!user) return;
 
-    if (callbackData.startsWith('select_channel:')) {
-      const [, channelId] = callbackData.split(':');
+    if (callbackData.startsWith("select_channel:")) {
+      const [, channelId] = callbackData.split(":");
 
       const state = PostCreationStates.getState(user.id);
 
@@ -391,7 +391,7 @@ export class TelegramUpdate {
         const channel = channels.find((channel) => channel.id === channelId);
 
         if (!channel) {
-          throw new Error('Канал не найден');
+          throw new Error("Канал не найден");
         }
 
         PostCreationStates.updateState(user.id, {
@@ -401,17 +401,17 @@ export class TelegramUpdate {
         });
 
         await ctx.editMessageText(TelegramMessages.post.enterSchedule, {
-          parse_mode: 'HTML',
+          parse_mode: "HTML",
         });
       } catch (error) {
         await ctx.editMessageText(
-          TelegramMessages.post.publishError('канал', (error as Error).message),
-          { parse_mode: 'HTML' },
+          TelegramMessages.post.publishError("канал", (error as Error).message),
+          { parse_mode: "HTML" },
         );
       }
     }
 
-    if (callbackData === 'confirm_post') {
+    if (callbackData === "confirm_post") {
       const state = PostCreationStates.getState(user.id);
       if (!state || state.step !== PostCreationStateSteps.WaitingConfirmation)
         return;
@@ -433,30 +433,30 @@ export class TelegramUpdate {
           const channel = channels.find((c) => c.id === state.channelId);
 
           await this.bot.api.sendMessage(channel!.telegramId, state.content, {
-            parse_mode: 'HTML',
+            parse_mode: "HTML",
           });
         }
 
         const message = TelegramMessages.post.publishSuccess(
-          state.channelTitle || '',
+          state.channelTitle || "",
           !!isScheduled,
           state.scheduledAt || undefined,
         );
 
-        await ctx.editMessageText(message, { parse_mode: 'HTML' });
+        await ctx.editMessageText(message, { parse_mode: "HTML" });
         PostCreationStates.clearState(user.id);
       } catch (err) {
         await ctx.editMessageText(
           TelegramMessages.post.publishError(
-            state.channelTitle || 'канал',
+            state.channelTitle || "канал",
             (err as Error).message,
           ),
-          { parse_mode: 'HTML' },
+          { parse_mode: "HTML" },
         );
       }
     }
 
-    if (callbackData === 'cancel_post') {
+    if (callbackData === "cancel_post") {
       PostCreationStates.clearState(user.id);
       await ctx.editMessageText(TelegramMessages.post.postCancelled);
     }
@@ -464,7 +464,7 @@ export class TelegramUpdate {
     try {
       await ctx.answerCallbackQuery();
     } catch (error) {
-      console.error('Error answering callback query:', error);
+      console.error("Error answering callback query:", error);
     }
   }
 }

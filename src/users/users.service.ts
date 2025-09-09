@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from '../entities/user.entity';
-import { TelegramAuthData } from 'src/auth/auth.service';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { User } from "../entities/user.entity";
+import { TelegramAuthData } from "src/auth/auth.service";
 
 @Injectable()
 export class UsersService {
@@ -14,14 +14,14 @@ export class UsersService {
   async findByTelegramId(telegramId: string): Promise<User | null> {
     return this.usersRepository.findOne({
       where: { telegramId },
-      relations: ['channels', 'posts'],
+      relations: ["channels", "posts"],
     });
   }
 
   async findById(id: string): Promise<User | null> {
     return this.usersRepository.findOne({
       where: { id },
-      relations: ['channels', 'posts'],
+      relations: ["channels", "posts"],
     });
   }
 
@@ -47,7 +47,7 @@ export class UsersService {
   ): Promise<User> {
     const user = await this.findByTelegramId(telegramId);
     if (!user) {
-      throw new NotFoundException('Пользователь не найден');
+      throw new NotFoundException("Пользователь не найден");
     }
 
     Object.assign(user, {

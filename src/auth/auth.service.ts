@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
-import { User } from '../entities/user.entity';
+import { Injectable } from "@nestjs/common";
+import { UsersService } from "../users/users.service";
+import { User } from "../entities/user.entity";
 
 export interface TelegramAuthData {
   telegramId: string;

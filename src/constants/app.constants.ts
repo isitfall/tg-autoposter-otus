@@ -11,6 +11,6 @@ export const APP_CONSTANTS = {
     DEFAULT_PORT: 5432,
   },
   DATE_FORMAT: {
-    ISO8601_EXAMPLE: '2025-12-25T15:30:00+03:00',
+    ISO8601_EXAMPLE: "2025-12-25T15:30:00+03:00",
   },
 } as const;

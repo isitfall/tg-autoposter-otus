@@ -1,15 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Bot, Context } from 'grammy';
-import { InjectBot } from '@grammyjs/nestjs';
+import { Injectable } from "@nestjs/common";
+import { Cron, CronExpression } from "@nestjs/schedule";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Bot, Context } from "grammy";
+import { InjectBot } from "@grammyjs/nestjs";
 import {
   PostPublication,
   PublicationStatus,
-} from 'src/entities/post-publication.entity';
-import { PostService } from 'src/post/post.service';
-import { LessThanOrEqual, Repository } from 'typeorm';
-import { APP_CONSTANTS } from 'src/constants/app.constants';
+} from "src/entities/post-publication.entity";
+import { PostService } from "src/post/post.service";
+import { LessThanOrEqual, Repository } from "typeorm";
+import { APP_CONSTANTS } from "src/constants/app.constants";
 
 @Injectable()
 export class PostSchedulerService {
@@ -28,9 +28,9 @@ export class PostSchedulerService {
         await this.bot.api.sendMessage(
           publication.channel.telegramId,
           publication.post.content,
-          { parse_mode: 'HTML' },
+          { parse_mode: "HTML" },
         );
-        console.log('POSTED');
+        console.log("POSTED");
         return;
       } catch (err) {
         if (attempt === retries) throw err;
@@ -50,7 +50,7 @@ export class PostSchedulerService {
         { status: PublicationStatus.PUBLISHED, scheduledAt: new Date() },
       );
     } catch (error) {
-      console.error('Error publishing scheduled post:', error);
+      console.error("Error publishing scheduled post:", error);
       await this.postPublicationRepository.update(
         { id: publication.id },
         {
@@ -71,10 +71,10 @@ export class PostSchedulerService {
           scheduledAt: LessThanOrEqual(now),
           status: PublicationStatus.SCHEDULED,
         },
-        relations: ['post', 'channel'],
+        relations: ["post", "channel"],
       });
 
-      console.log('sheduledPosts', scheduledPosts);
+      console.log("sheduledPosts", scheduledPosts);
 
       if (!scheduledPosts.length) return;
 
@@ -82,11 +82,11 @@ export class PostSchedulerService {
         try {
           await this.publishScheduledPost(postPublication);
         } catch (error) {
-          console.error('Error publishing scheduled post:', error);
+          console.error("Error publishing scheduled post:", error);
         }
       }
     } catch (error) {
-      console.error('Error processing scheduled posts:', error);
+      console.error("Error processing scheduled posts:", error);
     }
   }
 }

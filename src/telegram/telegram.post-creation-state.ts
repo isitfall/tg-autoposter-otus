@@ -1,4 +1,4 @@
-import { PostCreationState } from './telegram.types';
+import { PostCreationState } from "./telegram.types";
 
 export class PostCreationStates {
   private static states = new Map<string, PostCreationState>();

@@ -2,11 +2,11 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Channel } from 'src/entities/channel.entity';
-import { User } from 'src/entities/user.entity';
-import { Repository } from 'typeorm';
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Channel } from "src/entities/channel.entity";
+import { User } from "src/entities/user.entity";
+import { Repository } from "typeorm";
 
 @Injectable()
 export class ChannelsService {
@@ -27,14 +27,14 @@ export class ChannelsService {
       where: { id: channelData.userId },
     });
 
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException("User not found");
 
     const existingChannel = await this.channelsRepository.findOne({
       where: { telegramId: channelData.telegramId, userId: user.id },
     });
 
     if (existingChannel)
-      throw new ConflictException('Channel already exists for this user');
+      throw new ConflictException("Channel already exists for this user");
 
     const channel = this.channelsRepository.create({
       ...channelData,
@@ -47,7 +47,7 @@ export class ChannelsService {
   async getUserChannels(userId: string): Promise<Channel[]> {
     return this.channelsRepository.find({
       where: { userId },
-      relations: ['user'],
+      relations: ["user"],
     });
   }
 
@@ -59,7 +59,7 @@ export class ChannelsService {
       where: { telegramId: telegramChannelId, userId },
     });
 
-    if (!channel) throw new NotFoundException('Channel not found');
+    if (!channel) throw new NotFoundException("Channel not found");
 
     await this.channelsRepository.remove(channel);
   }

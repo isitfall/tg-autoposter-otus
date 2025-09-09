@@ -1,8 +1,8 @@
-import { Context } from 'grammy';
-import { TelegramUserData } from './telegram.types';
-import { User } from 'grammy/types';
-import { UsersService } from 'src/users/users.service';
-import { User as UserEntity } from 'src/entities/user.entity';
+import { Context } from "grammy";
+import { TelegramUserData } from "./telegram.types";
+import { User } from "grammy/types";
+import { UsersService } from "src/users/users.service";
+import { User as UserEntity } from "src/entities/user.entity";
 
 export class TelegramHelpers {
   static validateChannelPost(ctx: Context): TelegramUserData | null {
@@ -49,7 +49,7 @@ export class TelegramHelpers {
     errorMessage: string,
   ): Promise<boolean> {
     if (!user) {
-      await ctx.reply(errorMessage, { parse_mode: 'HTML' });
+      await ctx.reply(errorMessage, { parse_mode: "HTML" });
       return false;
     }
     return true;
