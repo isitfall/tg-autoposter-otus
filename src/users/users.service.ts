@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
+import { TelegramAuthData } from 'src/auth/auth.service';
 
 @Injectable()
 export class UsersService {
@@ -24,13 +25,7 @@ export class UsersService {
     });
   }
 
-  async createFromTelegram(telegramData: {
-    telegramId: string;
-    telegramUsername?: string;
-    telegramFirstName: string;
-    telegramLastName?: string;
-    telegramLanguageCode?: string;
-  }): Promise<User> {
+  async createFromTelegram(telegramData: TelegramAuthData): Promise<User> {
     const user = this.usersRepository.create({
       telegramId: telegramData.telegramId,
       telegramUsername: telegramData.telegramUsername,
