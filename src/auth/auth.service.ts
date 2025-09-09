@@ -23,7 +23,9 @@ export class AuthService {
     user: User;
     isNewUser: boolean;
   }> {
-    let user = await this.usersService.findByTelegramId(telegramData.telegramId);
+    let user = await this.usersService.findByTelegramId(
+      telegramData.telegramId,
+    );
     let isNewUser = false;
 
     if (!user) {
@@ -32,7 +34,7 @@ export class AuthService {
     } else {
       user = await this.usersService.updateTelegramData(
         telegramData.telegramId,
-        telegramData
+        telegramData,
       );
     }
 
@@ -40,28 +42,13 @@ export class AuthService {
       sub: user.id,
       telegramId: user.telegramId,
       username: user.telegramUsername,
-      firstName: user.telegramFirstName
+      firstName: user.telegramFirstName,
     };
 
     return {
       access_token: this.jwtService.sign(payload),
       user,
-      isNewUser
+      isNewUser,
     };
-  }
-
-  async validateJwtPayload(payload: any): Promise<User | null> {
-    return this.usersService.findById(payload.sub);
-  }
-
-  async generateTokenForUser(user: User): Promise<string> {
-    const payload = {
-      sub: user.id,
-      telegramId: user.telegramId,
-      username: user.telegramUsername,
-      firstName: user.telegramFirstName
-    };
-
-    return this.jwtService.sign(payload);
   }
 }

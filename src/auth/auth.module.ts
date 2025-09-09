@@ -13,7 +13,7 @@ import { UsersModule } from '../users/users.module';
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({
         secret: configService.get('auth.jwt_secret') || 'fallback-secret',
         signOptions: { expiresIn: '1d' },
       }),
