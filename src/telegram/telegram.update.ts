@@ -158,7 +158,7 @@ export class TelegramUpdate {
       await ctx.reply(successMessage, { parse_mode: 'HTML' });
     } catch (error) {
       await ctx.reply(
-        TelegramMessages.channel.addErrorWithDetails(error.message),
+        TelegramMessages.channel.addErrorWithDetails((error as Error).message),
         { parse_mode: 'HTML' },
       );
     }
@@ -405,7 +405,7 @@ export class TelegramUpdate {
         });
       } catch (error) {
         await ctx.editMessageText(
-          TelegramMessages.post.publishError('канал', error.message),
+          TelegramMessages.post.publishError('канал', (error as Error).message),
           { parse_mode: 'HTML' },
         );
       }
@@ -417,7 +417,16 @@ export class TelegramUpdate {
         return;
 
       try {
+        const post = await this.postService.createPost({
+          content: state.content,
+          userId: user.id,
+          channelId: state.channelId!,
+          scheduledAt: state?.scheduledAt ?? undefined,
+        });
+
         const isScheduled = state.scheduledAt && state.scheduledAt > new Date();
+
+        console.log({ post });
 
         if (!isScheduled) {
           const channels = await this.channelsService.getUserChannels(user.id);

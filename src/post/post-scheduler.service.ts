@@ -30,6 +30,7 @@ export class PostSchedulerService {
           publication.post.content,
           { parse_mode: 'HTML' },
         );
+        console.log('POSTED');
         return;
       } catch (err) {
         if (attempt === retries) throw err;
@@ -72,6 +73,8 @@ export class PostSchedulerService {
         },
         relations: ['post', 'channel'],
       });
+
+      console.log('sheduledPosts', scheduledPosts);
 
       if (!scheduledPosts.length) return;
 
