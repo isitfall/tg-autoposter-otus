@@ -11,16 +11,16 @@ export class UsersService {
   ) {}
 
   async findByTelegramId(telegramId: string): Promise<User | null> {
-    return this.usersRepository.findOne({ 
+    return this.usersRepository.findOne({
       where: { telegramId },
-      relations: ['channels', 'posts']
+      relations: ['channels', 'posts'],
     });
   }
 
   async findById(id: string): Promise<User | null> {
-    return this.usersRepository.findOne({ 
+    return this.usersRepository.findOne({
       where: { id },
-      relations: ['channels', 'posts']
+      relations: ['channels', 'posts'],
     });
   }
 
@@ -39,18 +39,21 @@ export class UsersService {
       telegramLanguageCode: telegramData.telegramLanguageCode,
       isActive: true,
       isBlocked: false,
-      lastInteraction: new Date()
+      lastInteraction: new Date(),
     });
 
     return this.usersRepository.save(user);
   }
 
-  async updateTelegramData(telegramId: string, telegramData: {
-    telegramUsername?: string;
-    telegramFirstName?: string;
-    telegramLastName?: string;
-    telegramLanguageCode?: string;
-  }): Promise<User> {
+  async updateTelegramData(
+    telegramId: string,
+    telegramData: {
+      telegramUsername?: string;
+      telegramFirstName?: string;
+      telegramLastName?: string;
+      telegramLanguageCode?: string;
+    },
+  ): Promise<User> {
     const user = await this.findByTelegramId(telegramId);
     if (!user) {
       throw new NotFoundException('Пользователь не найден');
@@ -58,7 +61,7 @@ export class UsersService {
 
     Object.assign(user, {
       ...telegramData,
-      lastInteraction: new Date()
+      lastInteraction: new Date(),
     });
 
     return this.usersRepository.save(user);
@@ -67,24 +70,24 @@ export class UsersService {
   async markAsBlocked(telegramId: string): Promise<void> {
     await this.usersRepository.update(
       { telegramId },
-      { isBlocked: true, isActive: false }
+      { isBlocked: true, isActive: false },
     );
   }
 
   async markAsActive(telegramId: string): Promise<void> {
     await this.usersRepository.update(
       { telegramId },
-      { 
-        isBlocked: false, 
-        isActive: true, 
-        lastInteraction: new Date() 
-      }
+      {
+        isBlocked: false,
+        isActive: true,
+        lastInteraction: new Date(),
+      },
     );
   }
 
   async getActiveUsers(): Promise<User[]> {
     return this.usersRepository.find({
-      where: { isActive: true, isBlocked: false }
+      where: { isActive: true, isBlocked: false },
     });
   }
 
@@ -96,7 +99,7 @@ export class UsersService {
     const [total, active, blocked] = await Promise.all([
       this.usersRepository.count(),
       this.usersRepository.count({ where: { isActive: true } }),
-      this.usersRepository.count({ where: { isBlocked: true } })
+      this.usersRepository.count({ where: { isBlocked: true } }),
     ]);
 
     return { total, active, blocked };

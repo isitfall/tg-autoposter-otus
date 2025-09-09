@@ -12,9 +12,9 @@ import { NestjsGrammyModule } from '@grammyjs/nestjs';
   imports: [
     TypeOrmModule.forFeature([Post, PostPublication, Channel]),
     ScheduleModule.forRoot(),
-    NestjsGrammyModule
+    NestjsGrammyModule,
   ],
   providers: [PostService, PostSchedulerService],
-  exports: [PostService, PostSchedulerService]
+  exports: [PostService, PostSchedulerService],
 })
 export class PostModule {}

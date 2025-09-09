@@ -1,5 +1,5 @@
-import { registerAs } from "@nestjs/config";
+import { registerAs } from '@nestjs/config';
 
 export default registerAs('auth', () => ({
-    jwt_secret: process.env.JWT_SECRET || 'fallback-secret',
+  jwt_secret: process.env.JWT_SECRET || 'fallback-secret',
 }));

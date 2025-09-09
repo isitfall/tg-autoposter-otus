@@ -1,11 +1,11 @@
 export interface CreatePostDto {
-    content: string;
-    userId: string;
-    channelId: string;
-    scheduledAt?: Date;
+  content: string;
+  userId: string;
+  channelId: string;
+  scheduledAt?: Date;
 }
 
 export interface PublishPostDto {
-    postId: string;
-    channelId: string;
+  postId: string;
+  channelId: string;
 }

@@ -1,4 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { User } from './user.entity';
 import { PostPublication } from './post-publication.entity';
 
@@ -23,7 +32,10 @@ export class Channel {
   @Column({ name: 'user_id' })
   userId: string;
 
-  @OneToMany(() => PostPublication, (postPublication) => postPublication.channel)
+  @OneToMany(
+    () => PostPublication,
+    (postPublication) => postPublication.channel,
+  )
   postPublications: PostPublication[];
 
   @CreateDateColumn()

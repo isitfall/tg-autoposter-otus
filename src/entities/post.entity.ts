@@ -1,7 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { User } from './user.entity';
 import { PostPublication } from './post-publication.entity';
-
 
 @Entity('posts')
 export class Post {
@@ -18,7 +26,9 @@ export class Post {
   @Column({ name: 'user_id' })
   userId: string;
 
-  @OneToMany(() => PostPublication, (postPublication) => postPublication.post, { cascade: true })
+  @OneToMany(() => PostPublication, (postPublication) => postPublication.post, {
+    cascade: true,
+  })
   postPublications: PostPublication[];
 
   @CreateDateColumn()
